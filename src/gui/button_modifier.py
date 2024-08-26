@@ -35,10 +35,13 @@ class ButtonModifier(IModifier):
 		
 		super().update(dt)
 
-	def get_style(self) -> Style:
-		style = super().get_style()
+	def get_style_mod(self) -> Style:
+		style = Style()
 		if self._pressed:
 			style = style.update(self._style_pressed)
 		elif self._hovered:
 			style = style.update(self._style_hovered)
 		return style
+
+	def get_offset(self) -> tuple[int, int]:
+		return 0, 0

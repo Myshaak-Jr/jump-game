@@ -1,4 +1,4 @@
-from core import IScene, AppState
+from core import IScene, app_state
 import pygame
 
 
@@ -7,8 +7,7 @@ PLAYER_FORCE = 1000
 
 
 class Player:
-	def __init__(self, x: float, y: float, app_state: AppState) -> None:
-		self.app_state = app_state
+	def __init__(self, x: float, y: float) -> None:
 		self.x = x
 		self.y = y
 		self.vel_x = 0
@@ -31,7 +30,7 @@ class Player:
 		self.force_x = 0
 		self.force_y = 0
 
-		if self.y > self.app_state.height - 10:
+		if self.y > app_state.height - 10:
 			return True
 		
 		return False
@@ -41,9 +40,8 @@ class Player:
 
 
 class LevelScene(IScene):
-	def __init__(self, app_state: AppState, gravity: float) -> None:
-		self.state = app_state
-		self.player_pos = Player(app_state.width // 4, app_state.height // 2, app_state)
+	def __init__(self, gravity: float) -> None:
+		self.player_pos = Player(app_state.width // 4, app_state.height // 2)
 		self.gravity = gravity
 		pygame.display.set_caption("Play")
 
@@ -70,17 +68,3 @@ class LevelScene(IScene):
 		self.player_pos.render(screen)
 		
 		pygame.display.flip()
-
-if __name__ == '__main__':
-	from core import App
-	import sys
-
-	try:
-		app_state = AppState(800, 600)
-		app = App(app_state)
-		app.set_scene(LevelScene(app_state, 1.0))
-		app.run()
-	except Exception as e:
-		print(e)
-		sys.exit(1)
-	sys.exit(0)

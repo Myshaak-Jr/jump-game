@@ -1,3 +1,3 @@
-from .scene import *
-from .app import *
-from .app_state import *
+from .scene import IScene
+from .app import App
+from .app_state import AppState, app_state

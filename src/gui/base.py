@@ -9,12 +9,23 @@ class IElement(ABC):
 		self._pos = pos
 		self._style = style
 		self._parent: IContainer = None
+		self._modifier: IModifier = None
 
 	def get_position(self) -> tuple[int, int]:
-		return self._pos
+		pos = self._pos
+		if self._modifier:
+			offset = self._modifier.get_offset()
+			pos = (pos[0] + offset[0], pos[1] + offset[1])
+		return pos
 
 	def set_position(self, pos: tuple[int, int]) -> None:
 		self._pos = pos
+
+	def set_modifier(self, modifier: IModifier) -> None:
+		self._modifier = modifier
+	
+	def get_modifier(self) -> IModifier:
+		return self._modifier
 
 	def set_parent(self, parent: IContainer) -> None:
 		self._parent = parent
@@ -26,7 +37,10 @@ class IElement(ABC):
 		self._style = self._style.update(new_style)
 
 	def get_style(self) -> Style:
-		return (self._parent.get_style() if self._parent else DEFAULT_STYLE).update(self._style)
+		style = (self._parent.get_style() if self._parent else DEFAULT_STYLE).update(self._style)
+		if self._modifier:
+			style = style.update(self._modifier.get_style_mod())
+		return style
 
 	@abstractmethod
 	def get_size(self) -> tuple[int, int]: ...
@@ -34,6 +48,7 @@ class IElement(ABC):
 	def update(self, dt: float) -> None: ...
 
 	def _draw_rect_with_aplha(self, screen: pygame.Surface, color: tuple[int, int, int, int], rect: tuple[int, int, int, int], border_width: int,  border_radius: int) -> None:
+		# TODO: cache the surface
 		x, y, width, height = rect
 		alpha_surface = pygame.Surface((width, height), pygame.SRCALPHA)
 		pygame.draw.rect(alpha_surface, color, alpha_surface.get_rect(), border_width, border_radius=border_radius)
@@ -42,11 +57,10 @@ class IElement(ABC):
 	def render(self, screen: pygame.Surface) -> None:
 		style = self.get_style()
 
-
 		if style.background_opacity > 0.01:
 			bg_color = (style.background_color[0], style.background_color[1], style.background_color[2], 255 * style.background_opacity)
 
-			pygame.draw.rect(
+			self._draw_rect_with_aplha(
 				screen,
 				bg_color,
 				(*self.get_position(), *self.get_size()),
@@ -56,7 +70,7 @@ class IElement(ABC):
 
 		if style.border_opacity > 0.01 and style.border_width > 0:
 			border_color = (style.border_color[0], style.border_color[1], style.border_color[2], 255 * style.border_opacity)
-			pygame.draw.rect(
+			self._draw_rect_with_aplha(
 				screen,
 				border_color,
 				(*self.get_position(), *self.get_size()),
@@ -67,6 +81,7 @@ class IElement(ABC):
 class IModifier(IElement):
 	def __init__(self, target: IElement):
 		self._target: IElement = target
+		target.set_modifier(self)
 	
 	def get_position(self) -> tuple[int, int]:
 		return self._target.get_position()
@@ -94,6 +109,21 @@ class IModifier(IElement):
 	
 	def render(self, screen: pygame.Surface) -> None:
 		self._target.render(screen)
+	
+	def set_modifier(self, modifier: IModifier) -> None:
+		raise ValueError("Cannot set modifier to a modifier")
+	
+	def get_modifier(self) -> IModifier:
+		return self
+	
+	def get_target(self) -> IElement:
+		return self._target
+	
+	@abstractmethod
+	def get_offset(self) -> tuple[int, int]: ...
+
+	@abstractmethod
+	def get_style_mod(self) -> Style: ...
 
 class IContainer(IElement):
 	def __init__(self, /, pos: tuple[int, int] = (0, 0), style: Style = Style()):

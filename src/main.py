@@ -1,13 +1,13 @@
 import sys
-from core import App, AppState
+from core import App, app_state
 from scenes.main_menu import MainMenuScene
 import util.logger as log
 
 
 def main() -> int:
-	app_state = AppState(1920 // 2, 1080 // 2)
-	app = App(app_state)
-	app.set_scene(MainMenuScene(app_state))
+	app_state.set_window_size(1920 // 2, 1080 // 2)
+	app = App()
+	app.set_scene(MainMenuScene())
 	app.run()
 
 	try:
