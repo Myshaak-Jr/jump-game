@@ -1,0 +1,9 @@
+# General
+general.title=Planet? Drive it!
+
+# GUI items
+gui.button.level_select=Level Select
+gui.button.play=Drive!
+
+# Captions
+caption.level_select=Select a level
