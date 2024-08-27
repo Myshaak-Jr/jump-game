@@ -4,6 +4,9 @@ general.title=Planet? Drive it!
 # GUI items
 gui.button.level_select=Level Select
 gui.button.play=Drive!
+gui.button.retry=Try Again
+gui.button.main_menu=Main Menu
+gui.label.game_over=Game Over!
 
 # Captions
 caption.level_select=Select a level

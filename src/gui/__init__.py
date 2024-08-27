@@ -1,7 +1,12 @@
 from .style import Style
-from .base import IElement, IContainer, IModifier
-from .label_element import LabelElement
-from .image_element import ImageElement
-from .button_modifier import ButtonModifier
-from .center_container import HCenterContainer, VCenterContainer
-from .container import Container
+from .base import IElement, IContainer, ISingleModifier
+# Elements
+from .elements.label_element import LabelElement
+from .elements.image_element import ImageElement
+from .elements.separator_element import HSeparatorElement, VSeparatorElement
+# Containers
+from .containers.center_container import HCenterContainer, VCenterContainer
+from .containers.container import Container
+# Modifiers
+from .modifier.button_modifier import ButtonModifier
+from .modifier.offset_modifier import OffsetModifier

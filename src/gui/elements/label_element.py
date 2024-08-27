@@ -1,11 +1,18 @@
 import pygame
-from .base import IElement
-from .style import Style
+from ..base import IElement
+from ..style import Style
+from typing import Optional
 
 
 class LabelElement(IElement):
-	def __init__(self, text: str, /, pos: tuple[int, int] = (0, 0), style: Style = Style()):
-		super().__init__(pos, style)
+	def __init__(self, text: str, *, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style()):
+		super().__init__(
+			left=left,
+			right=right,
+			top=top,
+			bottom=bottom,
+			style=style
+		)
 		self._text = text
 
 	def render(self, screen: pygame.Surface):
@@ -20,6 +27,7 @@ class LabelElement(IElement):
 	def get_size(self) -> tuple[int, int]:
 		style = self.get_style()
 		width, height = style.font.size(self._text)
-		width += style.padding_x * 2
-		height += style.padding_y * 2
-		return width, height
+
+		super_size = super().get_size()
+
+		return width + super_size[0], height + super_size[1]

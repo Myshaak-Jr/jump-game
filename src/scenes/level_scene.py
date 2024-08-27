@@ -1,5 +1,8 @@
 from core import IScene, app_state
 import pygame
+from gui import Container, LabelElement, Style
+from styles import LABEL_STYLE
+import util.language_manager as lm
 
 
 GRAVITY_BASE = 9.8 * 10
@@ -40,11 +43,17 @@ class Player:
 
 
 class LevelScene(IScene):
-	def __init__(self, gravity: float) -> None:
+	name = "level"
+	def __init__(self, planet) -> None:
 		self.player_pos = Player(app_state.width // 4, app_state.height // 2)
-		self.gravity = gravity
-		pygame.display.set_caption("Play")
+		self.planet = planet
+		self.gravity = app_state.get_planet_data(planet)["gravity"]
 
+		self.gui = Container().with_children(
+			LabelElement(lm.get(f"planet.{planet}.name"), style=LABEL_STYLE),
+		)
+
+		pygame.display.set_caption("Play")
 
 	def handle_event(self, event: pygame.event.Event) -> None:
 		pass
@@ -59,12 +68,15 @@ class LevelScene(IScene):
 
 		died = self.player_pos.update(dt)
 		if died:
-			...
-			#self.state.queue_scene(GameOverScene(self.state))
+			app_state.queue_scene("game_over", self.planet)
+		
+		self.gui.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:
 		screen.fill((0, 0, 0))
 
 		self.player_pos.render(screen)
-		
+
+		self.gui.render(screen)
+
 		pygame.display.flip()
