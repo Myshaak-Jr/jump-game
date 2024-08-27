@@ -32,14 +32,14 @@ class IElement(ABC):
 		if self._left is not None:
 			return self._left
 		if self._right is not None:
-			return self._get_parent_width() - self.get_size()[0] - self._right
+			return self._get_parent_width() - self.get_raw_size()[0] - self._right
 		return 0
 	
 	def _get_top(self) -> int:
 		if self._top is not None:
 			return self._top
 		if self._bottom is not None:
-			return self._get_parent_height() - self.get_size()[1] - self._bottom
+			return self._get_parent_height() - self.get_raw_size()[1] - self._bottom
 		return 0
 
 	def _get_independent_left(self) -> int:
@@ -84,12 +84,12 @@ class IElement(ABC):
 		return self._parent
 
 	def update_style(self, new_style: Style) -> None:
-		self._style = self._style.update(new_style)
+		self._style = self._style.updated(new_style)
 
 	def get_style(self) -> Style:
-		style = DEFAULT_STYLE.parent_update(self._parent.get_style() if self._parent else Style()).update(self._style)
+		style = DEFAULT_STYLE.parent_updated(self._parent.get_style() if self._parent else Style()).updated(self._style)
 		if self._modifier:
-			style = style.update(self._modifier.get_style_mod())
+			style = style.updated(self._modifier.get_style_mod())
 		return style
 
 	def get_size(self) -> tuple[int, int]:
@@ -102,6 +102,9 @@ class IElement(ABC):
 			width += size_modifier[0]
 			height += size_modifier[1]
 		return width, height
+
+	def get_raw_size(self) -> tuple[int, int]:
+		return self.get_size()
 
 	def update(self, dt: float) -> None: ...
 

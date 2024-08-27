@@ -6,7 +6,17 @@ gui.button.level_select=Level Select
 gui.button.play=Drive!
 gui.button.retry=Try Again
 gui.button.main_menu=Main Menu
+gui.button.continue=Continue
+gui.label.pause=Paused
 gui.label.game_over=Game Over!
 
 # Captions
 caption.level_select=Select a level
+caption.driving_on={}? Drive it!
+
+# Planets
+planet.luminis.name=Luminis
+planet.selvian.name=Selvian
+planet.sulius.name=Sulius
+planet.nyxana.name=Nyxana
+planet.acreus.name=Acreus

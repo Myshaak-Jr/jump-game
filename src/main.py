@@ -1,25 +1,31 @@
 import sys
 from core import App, app_state
 from scenes.main_menu import MainMenuScene
-from scenes.level_scene import LevelScene
-from scenes.game_over_scene import GameOverScene
+from scenes.level import LevelScene
+from scenes.game_over import GameOverScene
+from scenes.pause import PauseScene
+from scenes.win import WinScene
 import util.logger as log
-
+ 
 
 def main() -> int:
 	app_state.set_window_size(1920 // 2, 1080 // 2)
 	app_state.register_scene(MainMenuScene)
 	app_state.register_scene(LevelScene)
 	app_state.register_scene(GameOverScene)
+	app_state.register_scene(PauseScene)
+	app_state.register_scene(WinScene)
 
-	app = App()
-	app.set_scene(MainMenuScene())
-	app.run()
-
+	app = None
 	try:
-		...
+		app = App()
+		app.set_scene(MainMenuScene())
+		app.run()
+		app.quit()
 	except Exception as e:
 		log.error(e)
+		if app:
+			app.quit()
 		return 1
 	return 0
 

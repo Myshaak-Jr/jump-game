@@ -39,3 +39,8 @@ LABEL_STYLE = Style(
 	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 20),
 )
 
+DEBUG_STYLE = Style(
+	border_color=COLOR_RED,
+	border_width=1,
+	border_opacity=1,
+)

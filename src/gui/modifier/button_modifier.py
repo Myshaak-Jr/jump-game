@@ -5,7 +5,7 @@ from typing import Optional
 
 
 class ButtonModifier(ISingleModifier):
-	def __init__(self, target: IElement, *, on_click: callable, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style(), _style_hovered: Style = Style(), _style_pressed: Style = Style()):
+	def __init__(self, target: IElement, *, on_click: callable = None, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style(), style_hovered: Style = Style(), style_pressed: Style = Style()):
 		super().__init__(target)
 		self._on_click = on_click
 		self._hovered = False
@@ -17,8 +17,8 @@ class ButtonModifier(ISingleModifier):
 			bottom=bottom
 		)
 		self.update_style(style)
-		self._style_hovered = _style_hovered
-		self._style_pressed = _style_pressed
+		self._style_hovered = style_hovered
+		self._style_pressed = style_pressed
 		
 	def update(self, dt: float) -> None:
 		mouse_pos = pygame.mouse.get_pos()
@@ -33,7 +33,8 @@ class ButtonModifier(ISingleModifier):
 			else:
 				if self._pressed:
 					self._pressed = False
-					self._on_click()
+					if self._on_click:
+						self._on_click()
 		else:
 			self._hovered = False
 			self._pressed = False
@@ -43,9 +44,9 @@ class ButtonModifier(ISingleModifier):
 	def get_style_mod(self) -> Style:
 		style = Style()
 		if self._pressed:
-			style = style.update(self._style_pressed)
+			style = style.updated(self._style_pressed)
 		elif self._hovered:
-			style = style.update(self._style_hovered)
+			style = style.updated(self._style_hovered)
 		if self._modifier:
-			style = style.update(self._modifier.get_style_mod())
+			style = style.updated(self._modifier.get_style_mod())
 		return style

@@ -13,6 +13,7 @@ def init() -> None:
 		if file.endswith(".lang"):
 			with open(PATH + file, "r") as f:
 				_languages[file[:-5]] = dict([line.strip().replace("\\n", "\n").split("=") for line in f.readlines() if line.strip() and not line.strip().startswith("#")])
+			log.info(f"Loaded language '{file[:-5]}'")
 
 def get(key: str) -> str:
 	"""Returns the localized string for the given key."""

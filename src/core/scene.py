@@ -19,3 +19,7 @@ class IScene(ABC):
 	def render(self, screen: pygame.Surface) -> None:
 		"""Render the scene."""
 		pass
+
+	@classmethod
+	@abstractmethod
+	def get_name(cls) -> str: ...

@@ -31,6 +31,25 @@ class ImageElement(IElement):
 		self._darkened_cache[darken] = image
 		return image
 
+	def get_position(self) -> tuple[int, int]:
+		x, y = super().get_position()
+		style = self.get_style()
+
+		if style.image_scale > 1:
+			pass
+
+		w0, h0 = self._image.get_size()
+		w1, h1 = super().get_size()
+		x -= (w0 + w1) * (style.image_scale - 1) / 2
+		y -= (h0 + h1) * (style.image_scale - 1) / 2
+
+		return x, y
+	
+	def get_raw_size(self) -> tuple[int, int]:
+		width, height = self._image.get_size()
+		super_size = super().get_size()
+		return width + super_size[0], height + super_size[1]
+
 	def render(self, screen: pygame.Surface) -> None:
 		super().render(screen)
 		
@@ -40,10 +59,17 @@ class ImageElement(IElement):
 		if style.image_darken > 0.01:
 			image = self._get_darkened_image()
 
-		screen.blit(pygame.transform.rotate(image, style.image_rotation), self.get_position())
+		image = pygame.transform.rotate(image, style.image_rotation)
+
+		image_w, image_h = image.get_size()
+		image = pygame.transform.scale(image, (int(image_w * style.image_scale), int(image_h * style.image_scale)))
+
+		screen.blit(image, self.get_position())
 	
 	def get_size(self) -> tuple[int, int]:
 		width, height = self._image.get_size()
+		width *= self.get_style().image_scale
+		height *= self.get_style().image_scale
 		super_size = super().get_size()
 
 		return width + super_size[0], height + super_size[1]

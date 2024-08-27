@@ -20,8 +20,9 @@ class Style:
     padding_y: Optional[int] = None
     image_darken: Optional[float] = None
     image_rotation: Optional[float] = None
+    image_scale: Optional[float] = None
 
-    def update(self, update_style: Style) -> Style:
+    def updated(self, update_style: Style) -> Style:
         updated_style = Style()
         
         updated_style.text_color = update_style.text_color if update_style.text_color is not None else self.text_color
@@ -36,11 +37,12 @@ class Style:
         updated_style.padding_x = update_style.padding_x if update_style.padding_x is not None else self.padding_x
         updated_style.padding_y = update_style.padding_y if update_style.padding_y is not None else self.padding_y
         updated_style.image_darken = update_style.image_darken if update_style.image_darken is not None else self.image_darken
-        updated_style.image_rotation = update_style.image_rotation if update_style.image_rotation is not None else self.image_rotation
+        updated_style.image_rotation = (update_style.image_rotation or 0) + (self.image_rotation or 0)
+        updated_style.image_scale = (update_style.image_scale if update_style.image_scale is not None else 1) * (self.image_scale if self.image_scale is not None else 1)
 
         return updated_style
     
-    def parent_update(self, parent_style: Style) -> Style:
+    def parent_updated(self, parent_style: Style) -> Style:
         updated_style = Style()
         
         updated_style.text_color = parent_style.text_color if parent_style.text_color is not None else self.text_color
@@ -56,10 +58,10 @@ class Style:
         updated_style.padding_y = self.padding_y
         updated_style.image_darken = self.image_darken
         updated_style.image_rotation = self.image_rotation
+        updated_style.image_scale = self.image_scale
 
         return updated_style
 
-        
 
 DEFAULT_STYLE = Style(
 	text_color=(255, 255, 255),
@@ -75,4 +77,5 @@ DEFAULT_STYLE = Style(
 	padding_y=0,
     image_darken=0,
     image_rotation=0,
+    image_scale=1
 )
