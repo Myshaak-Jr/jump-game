@@ -7,9 +7,23 @@ COLOR_BLACK = (0, 0, 0)
 COLOR_RED = (255, 0, 0)
 
 
-BUTTON_STYLE = Style(
+HEADER_STYLE = Style(
+	text_color=COLOR_WHITE,
+	font=am.get_font("assets/font/Comfortaa-Bold.ttf", 50),
+)
+
+LABEL_STYLE = Style(
 	text_color=COLOR_WHITE,
 	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 35),
+)
+
+FOOTER_STYLE = Style(
+	text_color=COLOR_WHITE,
+	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 20),
+)
+
+
+BUTTON_STYLE = LABEL_STYLE.updated(Style(
 	background_color=COLOR_WINE,
 	background_opacity=0.6,
 	border_color=COLOR_WINE,
@@ -18,7 +32,7 @@ BUTTON_STYLE = Style(
 	border_radius=10,
 	padding_x=20,
 	padding_y=10
-)
+))
 
 BUTTON_STYLE_HOVERED = Style(
 	border_color=COLOR_WHITE,
@@ -29,15 +43,6 @@ BUTTON_STYLE_PRESSED = Style(
 	background_color=COLOR_WHITE,
 )
 
-HEADER_STYLE = Style(
-	text_color=COLOR_WHITE,
-	font=am.get_font("assets/font/Comfortaa-Bold.ttf", 50),
-)
-
-LABEL_STYLE = Style(
-	text_color=COLOR_WHITE,
-	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 20),
-)
 
 DEBUG_STYLE = Style(
 	border_color=COLOR_RED,

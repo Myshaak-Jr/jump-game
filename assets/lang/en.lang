@@ -8,9 +8,11 @@ gui.button.retry=Try Again
 gui.button.main_menu=Main Menu
 gui.button.continue=Continue
 gui.button.next_level=Next Level
+
 gui.label.pause=Paused
 gui.label.game_over=Game Over!
 gui.label.win=Level Cleared!
+gui.label.audio.master=Master
 
 # Captions
 caption.level_select=Select a level

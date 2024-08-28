@@ -1,6 +1,6 @@
 import pygame
 from core import IScene, app_state, PlanetData
-from gui import ImageElement, LabelElement, ButtonModifier, HCenterContainer, Container, Style, HSeparatorElement, OffsetModifier
+from gui import ImageElement, LabelElement, ButtonModifier, ColumnContainer, Container, Style, HSeparatorElement, OffsetModifier, Alignment, RowContainer, SliderElement
 import util.asset_manager as am
 import util.language_manager as lm
 import util.logger as log
@@ -8,7 +8,7 @@ from styles import DEBUG_STYLE, COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED,
 import json
 
 
-class VideoSettingsScene(IScene):
+class AudioSettingsScene(IScene):
 	def __init__(self) -> None:
 		try:
 			with open("data/save_file.json", "r") as file:
@@ -23,8 +23,8 @@ class VideoSettingsScene(IScene):
 			ImageElement(am.get_image("assets/image/gui/background.png", app_state.width)),
 			ImageElement(am.get_image("assets/image/gui/moon.png", app_state.width // 2), top = -25, left = -25),
 			ButtonModifier(
-				ImageElement(am.get_image("assets/image/gui/settings.png", app_state.width * 0.1)),
-				on_click = lambda: log.info("Settings"),
+				ImageElement(am.get_image("assets/image/gui/arrow_back.png", app_state.width * 0.1)),
+				on_click = lambda: app_state.queue_scene("main_menu"),
 				left = 20,
 				bottom = 20,
 				style_hovered = Style(image_darken=0.2),
@@ -36,22 +36,12 @@ class VideoSettingsScene(IScene):
 				right = 20,
 				bottom = 20
 			),
-			HCenterContainer(app_state.width / 2, 25, left = app_state.width / 2 - 40, top = 30).with_children(
-				LabelElement(lm.get("general.title"), style=HEADER_STYLE),
-				OffsetModifier(HSeparatorElement(app_state.width // 2, color=COLOR_WHITE), 0, -15),
-				ButtonModifier(
-					LabelElement(lm.get("gui.button.play")),
-					on_click=lambda: app_state.queue_scene("level", self.last_planet),
-					style=BUTTON_STYLE,
-					style_hovered=BUTTON_STYLE_HOVERED,
-					style_pressed=BUTTON_STYLE_PRESSED
-				),
-				ButtonModifier(
-					LabelElement(lm.get("gui.button.level_select")),
-					on_click=lambda: log.info(lm.get("caption.level_select")),
-					style=BUTTON_STYLE,
-					style_hovered=BUTTON_STYLE_HOVERED,
-					style_pressed=BUTTON_STYLE_PRESSED
+			ColumnContainer(app_state.width / 2, align=Alignment.START, min_gap = 25, left = app_state.width / 2 - 40, top = 200).with_children(
+				RowContainer(30, gap = 25).with_children(
+					LabelElement(lm.get("gui.label.audio.master"), style=LABEL_STYLE),
+					SliderElement(min=0, max=100, default=100, step=1, width=app_state.width / 4,
+						on_change=lambda value: log.info(f"Master volume: {value}")
+					)
 				)
 			)
 		)

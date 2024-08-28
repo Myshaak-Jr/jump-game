@@ -10,9 +10,9 @@ def main() -> int:
 	app_state.register_scene(MainMenuScene)
 	app_state.register_scene(LevelScene)
 	app_state.register_scene(GameOverScene)
-	app_state.register_scene(PauseScene)
-	app_state.register_scene(WinScene)
-	app_state.register_scene(VideoSettingsScene)
+	app_state.register_scene(PauseMenuScene)
+	app_state.register_scene(WinMenuScene)
+	app_state.register_scene(AudioSettingsScene)
 
 	app = None
 	try:

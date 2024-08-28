@@ -1,24 +1,25 @@
 from core import IScene, app_state, PlanetData, LevelData
 import pygame
-from gui import Container, LabelElement, Style, ButtonModifier, HCenterContainer, VCenterContainer, OffsetModifier, HSeparatorElement
+from gui import Container, LabelElement, Style, ButtonModifier, ColumnContainer, RowContainer, OffsetModifier, HSeparatorElement, Alignment
 from styles import LABEL_STYLE, HEADER_STYLE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, COLOR_WHITE
 import util.language_manager as lm
 from .level import LevelScene
+import util.logger as log
 
 
-class PauseScene(IScene):
+class WinMenuScene(IScene):
 	def __init__(self, last_level: LevelScene) -> None:
 		self.last_level = last_level
 
 		# create the GUI
 		self.gui = Container(width=app_state.width, height=app_state.height, style=Style()).with_children(
-			HCenterContainer(app_state.width, 25, top = app_state.height / 4).with_children(
-				LabelElement(lm.get("gui.label.pause"), style=HEADER_STYLE),
+			ColumnContainer(app_state.width, min_gap = 25, top = app_state.height / 4).with_children(
+				LabelElement(lm.get("gui.label.win"), style=HEADER_STYLE),
 				OffsetModifier(HSeparatorElement(app_state.width // 2, color=COLOR_WHITE), 0, -15),
-				VCenterContainer(app_state.height / 20, 25).with_children(
+				RowContainer(app_state.height / 20, gap = 25).with_children(
 					ButtonModifier(
-						LabelElement(lm.get("gui.button.continue")),
-						on_click=lambda: app_state.queue_scene(self.last_level),
+						LabelElement(lm.get("gui.button.next_level")),
+						on_click=lambda: log.info("Next level"),
 						style=BUTTON_STYLE,
 						style_hovered=BUTTON_STYLE_HOVERED,
 						style_pressed=BUTTON_STYLE_PRESSED
@@ -59,4 +60,4 @@ class PauseScene(IScene):
 
 	@classmethod
 	def get_name(cls) -> str:
-		return "pause"
+		return "win_menu"

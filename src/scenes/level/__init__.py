@@ -72,7 +72,7 @@ class LevelScene(IScene):
 	def _handle_event(self, event: pygame.event.Event) -> None:
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_ESCAPE:
-				app_state.queue_scene("pause", self)
+				app_state.queue_scene("pause_menu", self)
 	
 	def _kill(self) -> None:
 		app_state.queue_scene("game_over", self)
@@ -95,7 +95,7 @@ class LevelScene(IScene):
 
 	def _check_win(self) -> None:
 		if self.player.get_x() > self.level.width - 1:
-			app_state.queue_scene("win", self)
+			app_state.queue_scene("win_menu", self)
 
 	def update(self, dt: float) -> None:
 		self.player.update(dt)

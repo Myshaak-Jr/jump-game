@@ -1,7 +1,7 @@
 import pygame
 from core import IScene
 from core.app_state import app_state, PlanetData
-from gui import ImageElement, LabelElement, ButtonModifier, HCenterContainer, VCenterContainer, Container, Style, HSeparatorElement, OffsetModifier
+from gui import ImageElement, LabelElement, ButtonModifier, ColumnContainer, RowContainer, Container, Style, HSeparatorElement, OffsetModifier, Alignment
 import util.asset_manager as am
 import util.language_manager as lm
 import util.logger as log
@@ -15,10 +15,10 @@ class GameOverScene(IScene):
 
 		# create the GUI
 		self.gui = Container(width=app_state.width, height=app_state.height, style=Style()).with_children(
-			HCenterContainer(app_state.width, 25, top = app_state.height / 4).with_children(
+			ColumnContainer(app_state.width, min_gap = 25, top = app_state.height / 4).with_children(
 				LabelElement(lm.get("gui.label.game_over"), style=HEADER_STYLE),
 				OffsetModifier(HSeparatorElement(app_state.width // 2, color=COLOR_WHITE), 0, -15),
-				VCenterContainer(app_state.height / 20, 25).with_children(
+				RowContainer(app_state.height / 20, gap = 25).with_children(
 					ButtonModifier(
 						LabelElement(lm.get("gui.button.retry")),
 						on_click=lambda: app_state.queue_scene("level", self.last_level.planet),

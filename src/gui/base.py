@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from .style import Style, DEFAULT_STYLE
 from core import app_state
 from typing import Optional
+from util.draw import draw_rect_opacity
 
 
 class IElement(ABC):
@@ -108,33 +109,26 @@ class IElement(ABC):
 
 	def update(self, dt: float) -> None: ...
 
-	def _draw_rect_with_aplha(self, screen: pygame.Surface, color: tuple[int, int, int, int], rect: tuple[int, int, int, int], border_width: int,  border_radius: int) -> None:
-		# TODO: cache the surface
-		x, y, width, height = rect
-		alpha_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-		pygame.draw.rect(alpha_surface, color, alpha_surface.get_rect(), border_width, border_radius=border_radius)
-		screen.blit(alpha_surface, (x, y))
 
 	def render(self, screen: pygame.Surface) -> None:
 		style = self.get_style()
 		pos = self.get_position()
 
 		if style.background_opacity > 0.01:
-			bg_color = (style.background_color[0], style.background_color[1], style.background_color[2], 255 * style.background_opacity)
-
-			self._draw_rect_with_aplha(
+			draw_rect_opacity(
 				screen,
-				bg_color,
+				style.background_color,
+				style.background_opacity,
 				(*pos, *self.get_size()),
 				0,
 				border_radius=style.border_radius
 			)
 
 		if style.border_opacity > 0.01 and style.border_width > 0:
-			border_color = (style.border_color[0], style.border_color[1], style.border_color[2], 255 * style.border_opacity)
-			self._draw_rect_with_aplha(
+			draw_rect_opacity(
 				screen,
-				border_color,
+				style.border_color,
+				style.border_opacity,
 				(*pos, *self.get_size()),
 				style.border_width,
 				border_radius=style.border_radius
