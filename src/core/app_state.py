@@ -1,14 +1,13 @@
 from .scene import IScene
-from typing import Type
+from typing import Type, Any
 import json
-from typing import Any
 from dataclasses import dataclass
 import os
 import util.logger as log
 
 
 @dataclass
-class Level:
+class LevelData:
 	id: int
 	planet_id: int
 	level_data: list[list[str]]
@@ -24,8 +23,14 @@ class PlanetData:
 	game_speed: float
 	sprite_path: str
 	translation_key: str
-	levels: tuple[Level] = ()
+	levels: tuple[LevelData] = ()
 	current_level: int = None
+
+@dataclass
+class PlayerData:
+	thrust: float
+	thrust_decay: float
+
 
 class AppState:
 	def __init__(self) -> None:
@@ -35,11 +40,23 @@ class AppState:
 		self._next_scene: IScene = None
 		self._running = False
 		self._planet_data: list[PlanetData] = []
-		
-		with open("data/planet_data.json", "r") as file:
-			planets_json = json.load(file)["planets"]
+		self._player_data = None
 
-		for id, planet in enumerate(planets_json):
+		
+		with open("data/game_data.json", "r") as file:
+			game_data: dict[str, Any] = json.load(file)
+
+		self._load_planet_data(game_data)
+		self._load_player_data(game_data)
+
+	def _load_player_data(self, game_data: dict[str, Any]) -> None:
+		self._player_data = PlayerData(
+			thrust=game_data["player"]["thrust"],
+			thrust_decay=game_data["player"]["thrust_decay"]
+		)
+
+	def _load_planet_data(self, game_data: dict[str, Any]) -> None:
+		for id, planet in enumerate(game_data["planets"]):
 			name = planet["name"]
 
 			self._planet_data.append(PlanetData(
@@ -52,7 +69,7 @@ class AppState:
 				translation_key=f"planet.{name}.name"
 			))
 
-			levels: list[Level] = []
+			levels: list[LevelData] = []
 			level_files = []
 			try:
 				level_files = sorted(os.listdir(f"data/levels/{name}/"))
@@ -71,7 +88,7 @@ class AppState:
 
 						level_data = self._parse_level_data(raw_level_data)
 
-						levels.append(Level(
+						levels.append(LevelData(
 							id=level_id,
 							planet_id=id,
 							level_data=level_data,
@@ -127,6 +144,9 @@ class AppState:
 
 	def queue_stop(self) -> None:
 		self._running = False
+
+	def get_player_data(self) -> PlayerData:
+		return self._player_data
 	
 	def get_planet_data(self, id: int) -> PlanetData:
 		return self._planet_data[id]

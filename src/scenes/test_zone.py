@@ -1,5 +1,5 @@
 from __future__ import annotations
-from core import IScene, app_state, PlanetData, Level
+from core import IScene, app_state, PlanetData, LevelData
 import pygame
 from gui import Container, LabelElement, Style
 from styles import LABEL_STYLE
@@ -96,7 +96,7 @@ class Camera(IHasAABB):
 			self._zoom = 0.1
 		log.info(f"Zoom: {self._zoom}")
 
-	def follow_player(self, player: Player, level: Level) -> None:
+	def follow_player(self, player: Player, level: LevelData) -> None:
 		RELATIVE_X = 0.2
 		RELATIVE_Y = 0.2
 		view_width = app_state.width / self._zoom
@@ -269,7 +269,7 @@ class LevelScene(IScene):
 					self.add_tile(x, y)
 					
 
-	def handle_event(self, event: pygame.event.Event) -> None: ...
+	def _handle_event(self, event: pygame.event.Event) -> None: ...
 	
 	def kill(self) -> None:
 		app_state.queue_scene("game_over", self.planet)

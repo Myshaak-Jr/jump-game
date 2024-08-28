@@ -1,4 +1,4 @@
-from core import IScene, app_state, PlanetData, Level
+from core import IScene, app_state, PlanetData, LevelData
 import pygame
 from gui import Container, LabelElement, Style, ButtonModifier, HCenterContainer, VCenterContainer, OffsetModifier, HSeparatorElement
 from styles import LABEL_STYLE, HEADER_STYLE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, COLOR_WHITE
@@ -40,7 +40,7 @@ class PauseScene(IScene):
 		self.darken.fill((0, 0, 0))
 		self.darken.set_alpha(128)
 
-	def handle_event(self, event: pygame.event.Event) -> None:
+	def _handle_event(self, event: pygame.event.Event) -> None:
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_ESCAPE:
 				app_state.queue_scene(self.last_level)

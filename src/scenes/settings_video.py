@@ -8,7 +8,7 @@ from styles import DEBUG_STYLE, COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED,
 import json
 
 
-class MainMenuScene(IScene):
+class VideoSettingsScene(IScene):
 	def __init__(self) -> None:
 		try:
 			with open("data/save_file.json", "r") as file:
@@ -73,4 +73,4 @@ class MainMenuScene(IScene):
 	
 	@classmethod
 	def get_name(cls) -> str:
-		return "main_menu"
+		return "settings_video"

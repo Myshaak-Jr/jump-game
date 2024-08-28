@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 class IScene(ABC):
 	"""Base class for scenes."""
 	@abstractmethod
-	def handle_event(self, event: pygame.event.Event) -> None:
+	def _handle_event(self, event: pygame.event.Event) -> None:
 		"""Handles event."""
 		pass
 

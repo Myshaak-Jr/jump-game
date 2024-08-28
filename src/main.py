@@ -1,10 +1,7 @@
 import sys
 from core import App, app_state
-from scenes.main_menu import MainMenuScene
-from scenes.level import LevelScene
-from scenes.game_over import GameOverScene
-from scenes.pause import PauseScene
-from scenes.win import WinScene
+from scenes import *
+
 import util.logger as log
  
 
@@ -15,6 +12,7 @@ def main() -> int:
 	app_state.register_scene(GameOverScene)
 	app_state.register_scene(PauseScene)
 	app_state.register_scene(WinScene)
+	app_state.register_scene(VideoSettingsScene)
 
 	app = None
 	try:

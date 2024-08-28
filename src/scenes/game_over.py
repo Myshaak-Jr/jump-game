@@ -43,7 +43,7 @@ class GameOverScene(IScene):
 		self.darken.fill((0, 0, 0))
 		self.darken.set_alpha(128)
 
-	def handle_event(self, event: pygame.event.Event) -> None | IScene:
+	def _handle_event(self, event: pygame.event.Event) -> None | IScene:
 		pass
  
 	def update(self, dt: float) -> None | IScene:

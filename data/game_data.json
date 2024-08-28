@@ -1,4 +1,8 @@
 {
+	"player": {
+		"thrust": 400.0,
+		"thrust_decay": 0.1
+	},
 	"planets": [
 		{
 			"name": "luminis",
@@ -14,7 +18,7 @@
 		},
 		{
 			"name": "sulius",
-			"gravity": 1.0,
+			"gravity": 40.0,
 			"drag": 0.1,
 			"game_speed": 5.0
 		},

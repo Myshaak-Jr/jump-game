@@ -70,7 +70,7 @@ class App:
 				app_state._running = False
 				return
 
-			self._scene.handle_event(event)
+			self._scene._handle_event(event)
 			
 	def _update(self, dt: float) -> None:
 		self._scene.update(dt)
