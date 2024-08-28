@@ -3,12 +3,15 @@ import pygame
 from abc import ABC, abstractmethod
 from .style import Style, DEFAULT_STYLE
 from core import app_state
-from typing import Optional
+from typing import Self, overload
+from collections.abc import Iterable
 from util.draw import draw_rect_opacity
 
 
 class IElement(ABC):
-	def __init__(self, *, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style()):
+	pressed_element: IElement | None = None
+
+	def __init__(self, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()):
 		self.set_position(
 			left=left,
 			right=right,
@@ -16,8 +19,8 @@ class IElement(ABC):
 			bottom=bottom
 		)
 		self._style = style
-		self._parent: IContainer = None
-		self._modifier: ISingleModifier = None
+		self._parent: IContainer | None = None
+		self._modifier: ISingleModifier | None = None
 
 	def _get_parent_width(self) -> int:
 		if self._parent:
@@ -66,7 +69,7 @@ class IElement(ABC):
 			pos = (pos[0] + offset[0], pos[1] + offset[1])
 		return pos
 	
-	def set_position(self, *, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None) -> None:
+	def set_position(self, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None) -> None:
 		self._left = left
 		self._right = right
 		self._top = top
@@ -75,13 +78,13 @@ class IElement(ABC):
 	def set_modifier(self, modifier: ISingleModifier) -> None:
 		self._modifier = modifier
 	
-	def get_modifier(self) -> ISingleModifier:
+	def get_modifier(self) -> ISingleModifier | None:
 		return self._modifier
 
 	def set_parent(self, parent: IContainer) -> None:
 		self._parent = parent
 
-	def get_parent(self) -> IContainer:
+	def get_parent(self) -> IContainer | None:
 		return self._parent
 
 	def update_style(self, new_style: Style) -> None:
@@ -96,8 +99,8 @@ class IElement(ABC):
 	def get_size(self) -> tuple[int, int]:
 		width = height = 0
 		style = self.get_style()
-		width += style.padding_x * 2
-		height += style.padding_y * 2
+		width += (style.padding_x or 0) * 2
+		height += (style.padding_y or 0) * 2
 		if self._modifier:
 			size_modifier = self._modifier.get_size_mod(self)
 			width += size_modifier[0]
@@ -108,7 +111,6 @@ class IElement(ABC):
 		return self.get_size()
 
 	def update(self, dt: float) -> None: ...
-
 
 	def render(self, screen: pygame.Surface) -> None:
 		style = self.get_style()
@@ -149,7 +151,7 @@ class ISingleModifier(IElement, IModifier):
 	def __init__(self, target: IElement):
 		self._target: IElement = target
 		target.set_modifier(self)
-		self._modifier: IModifier = None
+		self._modifier: IModifier | None = None
 	
 	def get_position(self) -> tuple[int, int]:
 		return self._target.get_position()
@@ -157,7 +159,7 @@ class ISingleModifier(IElement, IModifier):
 	def get_independent_position(self) -> tuple[int, int]:
 		return self._target.get_independent_position()
 
-	def set_position(self, *, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None) -> None:
+	def set_position(self, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None) -> None:
 		self._target.set_position(
 			left=left,
 			right=right,
@@ -216,7 +218,7 @@ class ISingleModifier(IElement, IModifier):
 
 
 class IContainer(IElement):
-	def __init__(self, *, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style()):
+	def __init__(self, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()):
 		super().__init__(
 			left=left,
 			right=right,
@@ -232,9 +234,21 @@ class IContainer(IElement):
 		self._children.append(child)
 		child.set_parent(self)
 
-	def with_children(self, *children: IElement) -> IContainer:
-		for child in children:
+	@overload
+	def with_children(self, children: Iterable[IElement]) -> Self: ...
+
+	@overload
+	def with_children(self, *children: IElement) -> Self: ...
+
+	def with_children(self, children: Iterable[IElement], *rest: IElement) -> Self:
+		if not rest and not isinstance(children, IElement):
+			for child in list(children):
+				self.add_child(child)
+			return self
+
+		for child in [children, *rest]:
 			self.add_child(child)
+
 		return self
 
 	def remove_child(self, child: IElement) -> None:

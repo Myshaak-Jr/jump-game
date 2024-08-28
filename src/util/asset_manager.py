@@ -1,23 +1,32 @@
+from typing import overload
 import pygame
-from numbers import Number
 
 
 _images: dict[str, pygame.Surface] = {}
 _fonts: dict[tuple[str, int], pygame.font.Font] = {}
 
 
-def get_image(path: str, size: int | tuple[int, int] | None) -> pygame.Surface:
+@overload
+def get_image(path: str, size: float) -> pygame.Surface: ...
+
+@overload
+def get_image(path: str, size: tuple[float, float]) -> pygame.Surface: ...
+
+@overload
+def get_image(path: str, size: pygame.Vector2) -> pygame.Surface: ...
+
+def get_image(path: str, size: float | tuple[float, float] | pygame.Vector2) -> pygame.Surface:
 	if path not in _images:
 		_images[path] = pygame.image.load(path).convert_alpha()
 	image = _images[path]
 
-	if isinstance(size, Number):
-		size = (size, size * image.get_height() // image.get_width())
+	if isinstance(size, float):
+		size = (size, size * image.get_height() / image.get_width())
 	if size is not None:
-		image = pygame.transform.scale(image, size)
+		image = pygame.transform.scale(image, pygame.Vector2(size))
 	return image
 
-def get_font(path: str = None, size: int = 12) -> pygame.font.Font:
+def get_font(path: str | None = None, size: int = 12) -> pygame.font.Font:
 	if not pygame.font.get_init():
 		pygame.font.init()
 

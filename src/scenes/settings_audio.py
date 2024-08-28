@@ -1,10 +1,11 @@
 import pygame
 from core import IScene, app_state, PlanetData
-from gui import ImageElement, LabelElement, ButtonModifier, ColumnContainer, Container, Style, HSeparatorElement, OffsetModifier, Alignment, RowContainer, SliderElement
+from gui import ImageElement, LabelElement, ButtonModifier, Container, Style, HSeparatorElement, OffsetModifier, Alignment, SliderElement
+from gui.containers.flex_container import Direction, FlexContainer, Justification
 import util.asset_manager as am
 import util.language_manager as lm
 import util.logger as log
-from styles import DEBUG_STYLE, COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, BUTTON_STYLE_PRESSED, LABEL_STYLE, HEADER_STYLE
+from styles import COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, BUTTON_STYLE_PRESSED, LABEL_STYLE, HEADER_STYLE
 import json
 
 
@@ -23,7 +24,7 @@ class AudioSettingsScene(IScene):
 			ImageElement(am.get_image("assets/image/gui/background.png", app_state.width)),
 			ImageElement(am.get_image("assets/image/gui/moon.png", app_state.width // 2), top = -25, left = -25),
 			ButtonModifier(
-				ImageElement(am.get_image("assets/image/gui/arrow_back.png", app_state.width * 0.1)),
+				ImageElement(am.get_image("assets/image/gui/arrow_back.png", app_state.width // 10)),
 				on_click = lambda: app_state.queue_scene("main_menu"),
 				left = 20,
 				bottom = 20,
@@ -36,11 +37,11 @@ class AudioSettingsScene(IScene):
 				right = 20,
 				bottom = 20
 			),
-			ColumnContainer(app_state.width / 2, align=Alignment.START, min_gap = 25, left = app_state.width / 2 - 40, top = 200).with_children(
-				RowContainer(30, gap = 25).with_children(
+			FlexContainer(app_state.width // 2, direction=Direction.COLUMN, align=Alignment.START, gap = 25, left = app_state.width // 2 - 40, top = 200).with_children(
+				FlexContainer(app_state.width // 2, justify=Justification.SPACE_BETWEEN).with_children(
 					LabelElement(lm.get("gui.label.audio.master"), style=LABEL_STYLE),
-					SliderElement(min=0, max=100, default=100, step=1, width=app_state.width / 4,
-						on_change=lambda value: log.info(f"Master volume: {value}")
+					SliderElement(min_value=0, max_value=100, default=100, step=1, width=app_state.width / 4,
+						on_changed=lambda value: log.info(f"Master volume: {value}")
 					)
 				)
 			)
@@ -48,10 +49,10 @@ class AudioSettingsScene(IScene):
 
 		pygame.display.set_caption(lm.get("general.title"))
 
-	def _handle_event(self, event: pygame.event.Event) -> None | IScene:
+	def handle_event(self, event: pygame.event.Event) -> None:
 		pass
  
-	def update(self, dt: float) -> None | IScene:
+	def update(self, dt: float) -> None:
 		self.gui.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:

@@ -1,11 +1,10 @@
 import pygame
 from ..base import IElement, IContainer
 from ..style import Style
-from typing import Optional
 
 
 class Container(IContainer):
-	def __init__(self, width: int | str = "auto", height: int | str = "auto", *, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style()) -> None:
+	def __init__(self, width: int | str = "auto", height: int | str = "auto", *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()) -> None:
 		self._width = width
 		self._height = height
 		super().__init__(

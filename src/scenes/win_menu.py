@@ -1,6 +1,7 @@
 from core import IScene, app_state, PlanetData, LevelData
 import pygame
-from gui import Container, LabelElement, Style, ButtonModifier, ColumnContainer, RowContainer, OffsetModifier, HSeparatorElement, Alignment
+from gui import Container, LabelElement, Style, ButtonModifier, OffsetModifier, HSeparatorElement, Alignment
+from gui.containers.flex_container import Direction, FlexContainer
 from styles import LABEL_STYLE, HEADER_STYLE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, COLOR_WHITE
 import util.language_manager as lm
 from .level import LevelScene
@@ -13,10 +14,10 @@ class WinMenuScene(IScene):
 
 		# create the GUI
 		self.gui = Container(width=app_state.width, height=app_state.height, style=Style()).with_children(
-			ColumnContainer(app_state.width, min_gap = 25, top = app_state.height / 4).with_children(
+			FlexContainer(app_state.width, direction=Direction.COLUMN, gap = 25, top = app_state.height / 4).with_children(
 				LabelElement(lm.get("gui.label.win"), style=HEADER_STYLE),
 				OffsetModifier(HSeparatorElement(app_state.width // 2, color=COLOR_WHITE), 0, -15),
-				RowContainer(app_state.height / 20, gap = 25).with_children(
+				FlexContainer(app_state.height / 20, gap = 25).with_children(
 					ButtonModifier(
 						LabelElement(lm.get("gui.button.next_level")),
 						on_click=lambda: log.info("Next level"),
@@ -41,7 +42,7 @@ class WinMenuScene(IScene):
 		self.darken.fill((0, 0, 0))
 		self.darken.set_alpha(128)
 
-	def _handle_event(self, event: pygame.event.Event) -> None:
+	def handle_event(self, event: pygame.event.Event) -> None:
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_ESCAPE:
 				app_state.queue_scene(self.last_level)

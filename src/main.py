@@ -15,11 +15,11 @@ def main() -> int:
 	app_state.register_scene(AudioSettingsScene)
 
 	app = None
+	app = App()
+	app.run("main_menu")
+	app.quit()
 	try:
-		app = App()
-		app.set_scene(MainMenuScene())
-		app.run()
-		app.quit()
+		...
 	except Exception as e:
 		log.error(e)
 		if app:

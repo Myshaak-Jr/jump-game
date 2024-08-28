@@ -1,7 +1,7 @@
+from turtle import width
 import pygame
-from ..base import IContainer
+from ..base import IContainer, IElement
 from ..style import Style
-from typing import Optional
 from enum import Enum
 
 
@@ -13,9 +13,10 @@ class Alignment(Enum):
 class Justification(Enum):
 	START = 0
 	END = 1
-	SPACE_AROUND = 2
+	CENTER = 2
 	SPACE_BETWEEN = 3
-	SPACE_EVENLY = 4
+	SPACE_AROUND = 4
+	SPACE_EVENLY = 5
 
 class Direction(Enum):
 	ROW = 0
@@ -23,16 +24,9 @@ class Direction(Enum):
 
 
 class FlexContainer(IContainer):
-	def __init__(self, width: int, height: int, *,
-		direction: Direction = Direction.ROW,
-		align: Alignment = Alignment.CENTER,
-		justify: Justification = Justification.START,
-		min_gap: int = 0,
-		left: Optional[int] = None,
-		right: Optional[int] = None,
-		top: Optional[int] = None,
-		bottom: Optional[int] = None,
-		style: Style = Style()):
+	def __init__(self,
+			  min_width: int = 0,
+			  min_height: int = 0, *, direction: Direction = Direction.ROW, align: Alignment = Alignment.CENTER, justify: Justification = Justification.START, gap: int = 0, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()):
 		super().__init__(
 			left=left,
 			right=right,
@@ -43,9 +37,72 @@ class FlexContainer(IContainer):
 		self._direction = direction
 		self._align = align
 		self._justify = justify
+		self._width = min_width
+		self._height = min_height
+		self._gap = gap
+
+	def get_direction(self) -> Direction:
+		return self._direction
+
+	def set_direction(self, direction: Direction) -> None:
+		self._direction = direction
+
+	def get_alignment(self) -> Alignment:
+		return self._align
+	
+	def set_alignment(self, alignment: Alignment) -> None:
+		self._align = alignment
+
+	def get_justification(self) -> Justification:
+		return self._justify
+
+	def set_justification(self, justification: Justification) -> None:
+		self._justify = justification
+
+	def get_gap(self) -> int:
+		return self._gap
+
+	def set_gap(self, min_gap: int) -> None:
+		self._gap = min_gap
+
+	def set_min_size(self, width: int, height: int) -> None:
 		self._width = width
 		self._height = height
-		self._min_gap = min_gap
+
+	def get_min_size(self) -> tuple[int, int]:
+		return self._width, self._height
+
+	def _calc_children_width(self) -> int:
+		if self._direction == Direction.ROW:
+			return sum(child.get_size()[0] for child in self._children)
+		else:
+			return max(child.get_size()[0] for child in self._children)
+		
+	def _calc_children_height(self) -> int:
+		if self._direction == Direction.ROW:
+			return max(child.get_size()[1] for child in self._children)
+		else:
+			return sum(child.get_size()[1] for child in self._children)
+	
+	def _calc_min_content_width(self) -> int:
+		children_width = self._calc_children_width()
+		if self._direction == Direction.ROW:
+			return children_width + self._gap * (len(self._children) - 1)
+		else:
+			return children_width
+	
+	def _calc_min_content_height(self) -> int:
+		children_height = self._calc_children_height()
+		if self._direction == Direction.ROW:
+			return children_height
+		else:
+			return children_height + self._gap * (len(self._children) - 1)
+
+	def _calc_children_size(self) -> tuple[int, int]:
+		return self._calc_children_width(), self._calc_children_height()
+
+	def _calc_min_content_size(self) -> tuple[int, int]:
+		return self._calc_min_content_width(), self._calc_min_content_height()
 
 	def _calc_child_cross_pos(self, cross_size: int, child_cross_size: int) -> int:
 		if self._align == Alignment.CENTER:
@@ -55,15 +112,87 @@ class FlexContainer(IContainer):
 		elif self._align == Alignment.END:
 			return cross_size - child_cross_size
 
+	def _set_child_position(self, child: IElement, main_pos: int, cross_pos: int) -> None:
+		if self._direction == Direction.ROW:
+			child.set_position(left=main_pos, top=cross_pos)
+		else:
+			child.set_position(left=cross_pos, top=main_pos)
+
 	def _update_start(self) -> None:
-		main_pos = 0
-		main_size, cross_size = self._orient(self.get_size())
-		children_main_size = self._calc_children_main_size()
+		child_main_pos = 0
+		_, cross_size = self._orient(self.get_size())
 
 		for child in self._children:
 			child_main_size, child_cross_size = self._orient(child.get_size())
 
-			child_cross_pos = self._calc_child_cross_pos(main_size, child_main_size)
+			child_cross_pos = self._calc_child_cross_pos(cross_size, child_cross_size)
+			self._set_child_position(child, child_main_pos, child_cross_pos)
+
+			child_main_pos += child_main_size + self._gap
+
+	def _update_end(self) -> None:
+		main_size, cross_size = self._orient(self.get_size())
+		child_main_pos = main_size - self._orient(self._calc_min_content_size())[0]
+
+		for child in self._children:
+			child_main_size, child_cross_size = self._orient(child.get_size())
+
+			child_cross_pos = self._calc_child_cross_pos(cross_size, child_cross_size)
+			self._set_child_position(child, child_main_pos, child_cross_pos)
+
+			child_main_pos += child_main_size + self._gap
+
+	def _update_center(self) -> None:
+		main_size, cross_size = self._orient(self.get_size())
+		child_main_pos = (main_size - self._orient(self._calc_min_content_size())[0]) // 2
+
+		for child in self._children:
+			child_main_size, child_cross_size = self._orient(child.get_size())
+
+			child_cross_pos = self._calc_child_cross_pos(cross_size, child_cross_size)
+			self._set_child_position(child, child_main_pos, child_cross_pos)
+
+			child_main_pos += child_main_size + self._gap
+
+	def _update_space_between(self) -> None:
+		main_size, cross_size = self._orient(self.get_size())
+		child_main_pos = 0
+
+		gap = (main_size - self._orient(self._calc_children_size())[0]) / (len(self._children) - 1)
+
+		for child in self._children:
+			child_main_size, child_cross_size = self._orient(child.get_size())
+
+			child_cross_pos = self._calc_child_cross_pos(cross_size, child_cross_size)
+			self._set_child_position(child, child_main_pos, child_cross_pos)
+
+			child_main_pos += child_main_size + gap
+	
+	def _update_space_around(self) -> None:
+		main_size, cross_size = self._orient(self.get_size())
+		gap = (main_size - self._orient(self._calc_children_size())[0]) / len(self._children)
+		child_main_pos = gap / 2
+
+		for child in self._children:
+			child_main_size, child_cross_size = self._orient(child.get_size())
+
+			child_cross_pos = self._calc_child_cross_pos(cross_size, child_cross_size)
+			self._set_child_position(child, child_main_pos, child_cross_pos)
+
+			child_main_pos += child_main_size + gap
+
+	def _update_space_evenly(self) -> None:
+		main_size, cross_size = self._orient(self.get_size())
+		gap = (main_size - self._orient(self._calc_children_size())[0]) / (len(self._children) + 1)
+		child_main_pos = gap
+
+		for child in self._children:
+			child_main_size, child_cross_size = self._orient(child.get_size())
+
+			child_cross_pos = self._calc_child_cross_pos(cross_size, child_cross_size)
+			self._set_child_position(child, int(child_main_pos), child_cross_pos)
+
+			child_main_pos += child_main_size + gap
 
 
 	def update(self, dt: float) -> None:
@@ -72,6 +201,8 @@ class FlexContainer(IContainer):
 			self._update_start()
 		elif self._justify == Justification.END:
 			self._update_end()
+		elif self._justify == Justification.CENTER:
+			self._update_center()
 		elif self._justify == Justification.SPACE_AROUND:
 			self._update_space_around()
 		elif self._justify == Justification.SPACE_BETWEEN:
@@ -93,127 +224,15 @@ class FlexContainer(IContainer):
 		else:
 			return vector[::-1]
 
-	def _calc_children_main_size(self) -> int:
-		return sum(self._orient(child.get_size())[0] for child in self._children) + self._min_gap * (len(self._children) - 1)
-
 	def get_size(self) -> tuple[int, int]:
 		width, height = super().get_size()
 
-		if self._direction == Direction.ROW:
-			width += max(self._calc_children_main_size(), self._width)
-			height += self._height
-		else:
-			width += self._width
-			height += max(self._calc_children_main_size(), self._height)
+		content_width, content_height = self._calc_min_content_size()
+
+		width += max(content_width, self._width)
+		height += max(content_height, self._height)
 
 		return width, height
 	
 	def get_independent_size(self) -> tuple[int, int]:
-		return self.get_size()
-
-
-
-
-class ColumnContainer(IContainer):
-	def __init__(self, width: int, height: int = 0, *, align: Alignment = Alignment.CENTER, justify: Justification = Justification.START, min_gap: int = 0, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style()):
-		super().__init__(
-			left=left,
-			right=right,
-			top=top,
-			bottom=bottom,
-			style=style
-		)
-		self._align = align
-		self._width = width
-		self._height = height
-		self._min_gap = min_gap
-
-
-	def _get_new_x(self, width: int) -> int:
-		if self._align == Alignment.CENTER:
-			return (self._width - width) // 2
-		elif self._align == Alignment.START:
-			return 0
-		elif self._align == Alignment.END:
-			return self._width - width
-
-	def update(self, dt: float) -> None:
-		y = 0
-		width, height = self.get_size()
-
-		for child in self._children:
-			child_width, child_height = child.get_size()
-
-			if self._align == Alignment.CENTER:
-				x = (width - child_width) // 2
-				child.set_position(left=x, top=y)
-			elif self._align == Alignment.START:
-				child.set_position(left=0, top=y)
-			elif self._align == Alignment.END:
-				child.set_position(right=0, top=y)
-
-			y += child_height + self._min_gap
-
-			child.update(dt)
-
-	def render(self, screen: pygame.Surface):
-		super().render(screen)
-		for child in self._children:
-			child.render(screen)
-	
-	def get_size(self) -> tuple[int, int]:
-		width, height = super().get_size()
-		width += self._width
-		my_height = sum(child.get_size()[1] for child in self._children) + self._min_gap * (len(self._children) - 1)
-		height += max(my_height, self._height)
-		return width, height
-	
-	def get_independent_size(self) -> tuple[int, int]:
-		return self.get_size()
-
-
-class RowContainer(IContainer):
-	def __init__(self, height: int, *, align: Alignment = Alignment.CENTER, gap: int = 0, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style()):
-		super().__init__(
-			left=left,
-			right=right,
-			top=top,
-			bottom=bottom,
-			style=style
-		)
-		self._align = align
-		self._gap = gap
-		self._height = height
-
-	def update(self, dt: float) -> None:
-		x = 0
-		height = self.get_size()[1]
-
-		for child in self._children:
-			child_width, child_height = child.get_size()
-
-			if self._align == Alignment.CENTER:
-				y = (height - child_height) // 2
-				child.set_position(left=x, top=y)
-			elif self._align == Alignment.START:
-				child.set_position(left=x, top=0)
-			elif self._align == Alignment.END:
-				child.set_position(left=x, bottom=0)
-
-			x += child_width + self._gap
-			
-			child.update(dt)
-
-	def render(self, screen: pygame.Surface) -> None:
-		super().render(screen)
-		for child in self._children:
-			child.render(screen)
-	
-	def get_size(self) -> tuple[int, int]:
-		width, height = super().get_size()
-		width += sum(child.get_size()[0] for child in self._children) + self._gap * (len(self._children) - 1)
-		height += self._height
-		return width, height
-
-	def get_independent_size(self) -> tuple[int, int]:
-		return self.get_size()
+		return self._width, self._height

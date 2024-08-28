@@ -1,15 +1,9 @@
 from __future__ import annotations
-from core import IScene, app_state, PlanetData, LevelData
+from core import IScene, app_state, PlanetData
 import pygame
-from gui import Container, LabelElement, Style, ButtonModifier, ImageElement
-from styles import LABEL_STYLE
+from gui import Container, Style, ButtonModifier, ImageElement
 import util.language_manager as lm
 import util.asset_manager as am
-from enum import Enum
-from dataclasses import dataclass
-from typing import Optional
-from abc import ABC, abstractmethod
-import util.logger as log
 from .camera import Camera
 from .player import Player
 from .tile import Tile
@@ -23,19 +17,20 @@ class LevelScene(IScene):
 		
 		pygame.display.set_caption(lm.get("caption.driving_on").format(lm.get(self.planet.translation_key)))
 
-		self.gui = Container().with_children(
+		self._gui = Container().with_children(
 			ButtonModifier(
 				ImageElement(am.get_image("assets/image/gui/pause.png", app_state.width * 0.1)),
-				on_click = lambda: app_state.queue_scene("pause", self),
+				on_click = lambda: app_state.queue_scene("pause_menu", self),
 				left = 20,
 				top = 20,
 				style_hovered = Style(image_darken=0.2),
 				style_pressed = Style(image_darken=0.2, image_scale=1.1),
-			),
+			)
 		)
 		
 		if planet.current_level >= len(planet.levels):
 			raise ValueError("Invalid level ID")
+		
 		self.level = planet.levels[planet.current_level]
 		self._load_level()
 
@@ -69,7 +64,7 @@ class LevelScene(IScene):
 				if self.level.level_data[y][x] == "#":
 					self._add_tile(x, y)
 
-	def _handle_event(self, event: pygame.event.Event) -> None:
+	def handle_event(self, event: pygame.event.Event) -> None:
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_ESCAPE:
 				app_state.queue_scene("pause_menu", self)
@@ -101,7 +96,7 @@ class LevelScene(IScene):
 		self.player.update(dt)
 		self._check_win()
 		self._collide()
-		self.gui.update(dt)
+		self._gui.update(dt)
 		self.camera.follow_object(self.player, self.level)
 
 	def render_game_content(self, screen: pygame.Surface) -> None:
@@ -114,7 +109,7 @@ class LevelScene(IScene):
 		screen.fill((0, 0, 0))
 
 		self.render_game_content(screen)
-		self.gui.render(screen)
+		self._gui.render(screen)
 
 		pygame.display.flip()
 	

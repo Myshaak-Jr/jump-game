@@ -1,36 +1,33 @@
 from __future__ import annotations
 import pygame
 from dataclasses import dataclass
-from typing import Optional
 import util.asset_manager as am
 from copy import copy
 
 
 @dataclass
 class Style:
-	text_color: Optional[tuple[int, int, int]] = None
-	text_opacity: Optional[float] = None
-	font: Optional[pygame.font.Font] = None
-	background_color: Optional[tuple[int, int, int]] = None
-	background_opacity: Optional[float] = None
-	border_color: Optional[tuple[int, int, int]] = None
-	border_opacity: Optional[float] = None
-	border_width: Optional[int] = None
-	border_radius: Optional[int] = None
-	padding_x: Optional[int] = None
-	padding_y: Optional[int] = None
-	image_darken: Optional[float] = None
-	image_rotation: Optional[float] = None
-	image_scale: Optional[float] = None
-	slider_track_color: Optional[tuple[int, int, int]] = None
-	slider_track_opacity: Optional[float] = None
-	slider_track_width: Optional[int] = None
-	slider_handle_color: Optional[tuple[int, int, int]] = None
-	slider_handle_opacity: Optional[float] = None
-	slider_handle_radius: Optional[int] = None
-	slider_handle_border_color: Optional[tuple[int, int, int]] = None
-	slider_handle_border_opacity: Optional[float] = None
-	slider_handle_border_width: Optional[int] = None
+	text_color: tuple[int, int, int] | None = None
+	text_opacity: float | None = None
+	font: pygame.font.Font | None = None
+	background_color: tuple[int, int, int] | None = None
+	background_opacity: float | None = None
+	border_color: tuple[int, int, int] | None = None
+	border_opacity: float | None = None
+	border_width: int | None = None
+	border_radius: int | None = None
+	padding_x: int | None = None
+	padding_y: int | None = None
+	image_darken: float | None = None
+	image_rotation: float | None = None
+	image_scale: float | None = None
+	slider_track_color: tuple[int, int, int] | None = None
+	slider_track_opacity: float | None = None
+	slider_track_width: int | None = None
+	slider_handle_color: tuple[int, int, int] | None = None
+	slider_handle_radius: int | None = None
+	slider_handle_border_color: tuple[int, int, int] | None = None
+	slider_handle_border_width: int | None = None
 
 	def updated(self, update_style: Style) -> Style:
 		updated_style = Style()
@@ -57,10 +54,8 @@ class Style:
 		updated_style.slider_track_opacity = update_style.slider_track_opacity if update_style.slider_track_opacity is not None else self.slider_track_opacity
 		updated_style.slider_track_width = update_style.slider_track_width if update_style.slider_track_width is not None else self.slider_track_width
 		updated_style.slider_handle_color = update_style.slider_handle_color if update_style.slider_handle_color is not None else self.slider_handle_color
-		updated_style.slider_handle_opacity = update_style.slider_handle_opacity if update_style.slider_handle_opacity is not None else self.slider_handle_opacity
 		updated_style.slider_handle_radius = update_style.slider_handle_radius if update_style.slider_handle_radius is not None else self.slider_handle_radius
 		updated_style.slider_handle_border_color = update_style.slider_handle_border_color if update_style.slider_handle_border_color is not None else self.slider_handle_border_color
-		updated_style.slider_handle_border_opacity = update_style.slider_handle_border_opacity if update_style.slider_handle_border_opacity is not None else self.slider_handle_border_opacity
 		updated_style.slider_handle_border_width = update_style.slider_handle_border_width if update_style.slider_handle_border_width is not None else self.slider_handle_border_width
 
 		return updated_style
@@ -76,7 +71,7 @@ class Style:
 
 
 DEFAULT_STYLE = Style(
-	text_color=(255, 255, 255),
+	text_color=(0, 0, 0),
 	text_opacity=1,
 	font=am.get_font(),
 	background_color=(0, 0, 0),
@@ -92,13 +87,11 @@ DEFAULT_STYLE = Style(
 	image_rotation=0,
 	image_scale=1,
 	# Slider properties
-	slider_track_color=(255, 255, 255),
+	slider_track_color=(0, 0, 0),
 	slider_track_opacity=1,
 	slider_track_width=3,
-	slider_handle_color=(255, 255, 255),
-	slider_handle_opacity=1,
-	slider_handle_radius=5,
+	slider_handle_color=(0, 0, 0),
+	slider_handle_radius=15,
 	slider_handle_border_color=(0, 0, 0),
-	slider_handle_border_opacity=1,
 	slider_handle_border_width=3
 )

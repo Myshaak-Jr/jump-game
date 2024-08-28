@@ -1,8 +1,8 @@
-from ..base import ISingleModifier
+from ..base import ISingleModifier, IElement
 
 
 class OffsetModifier(ISingleModifier):
-	def __init__(self, target: ISingleModifier, offset_x: int, offset_y: int):
+	def __init__(self, target: IElement, offset_x: int, offset_y: int):
 		super().__init__(target)
 		self._offset_x = offset_x
 		self._offset_y = offset_y

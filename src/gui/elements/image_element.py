@@ -1,11 +1,10 @@
 import pygame
 from ..base import IElement
 from ..style import Style
-from typing import Optional
 
 	
 class ImageElement(IElement):
-	def __init__(self, image: pygame.Surface, *, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style()):
+	def __init__(self, image: pygame.Surface, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()):
 		super().__init__(
 			left=left,
 			right=right,

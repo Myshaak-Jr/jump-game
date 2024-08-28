@@ -2,71 +2,134 @@ import pygame
 from ..base import IElement
 from typing import Callable
 from util.draw import draw_rect_opacity, draw_circle_opacity
+from ..style import Style
 
+
+DEFAULT_STYLE_HOVERED = Style(
+	slider_handle_color=(127, 127, 127),
+)
+
+DEFAULT_STYLE_HELD = Style(
+	slider_handle_color=(255, 255, 255),
+)
 
 class SliderElement(IElement):
-	def __init__(self, width, *, min: float, max: float, default: float, step: float, on_change: Callable[[float], None], left: int = None, right: int = None, top: int = None, bottom: int = None):
+	def __init__(self, *,
+			  width: float,
+			  min_value: float,
+			  max_value: float,
+			  default: float = 0,
+			  step: float = 1,
+			  on_changed: Callable[[float], None],
+			  left: float | None = None,
+			  right: float | None = None,
+			  top: float | None = None,
+			  bottom: float | None = None,
+			  style: Style = Style(), style_hovered: Style = DEFAULT_STYLE_HOVERED, style_held: Style = DEFAULT_STYLE_HELD):
 		super().__init__(
 			left=left,
 			right=right,
 			top=top,
-			bottom=bottom
+			bottom=bottom,
+			style=style
 		)
 		self._width = width
-		self._min = min
-		self._max = max
-		self._value = default
+		self._min = min_value
+		self._max = max_value
+		self._value = min(max_value, max(min_value, default))
 		self._step = step
-		self._on_change = on_change
+		self._on_changed = on_changed
+		self._held = False
+
+		self._style_hovered = style_hovered
+		self._style_held = style_held
+
+		self._pressed = False
+		self._hovered = False
 	
 		self._dir = 1
 
+		if self._on_changed:
+			self._on_changed(self._value)
+
+	def on_changed(self, func: Callable[[float], None]) -> None:
+		self._on_changed = func
+
+	def set_value(self, value: float):
+		self._value = value
+
+	def get_value(self):
+		return self._value
+
+	def _get_handle_x(self) -> int:
+		style = self.get_style()
+		width, _ = self.get_size()
+
+		handle_x = (self._value - self._min) / (self._max - self._min) * (width - style.slider_handle_radius * 2) + style.slider_handle_radius
+
+		return handle_x
+
 	def update(self, dt):
-		SPEED = 20
+		if IElement.pressed_element is not None and IElement.pressed_element != self: return
 
-		self._value += self._dir * SPEED * dt
+		mouse_x, mouse_y = pygame.mouse.get_pos()
+		pressed = pygame.mouse.get_pressed()[0]
 
-		if self._value < self._min:
-			self._value = self._min
-			self._dir = 1
-		elif self._value > self._max:
-			self._value = self._max
-			self._dir = -1
+		style = self.get_style()
+		x, y = self.get_position()
 
-		self._on_change(self._value)
+		x += style.padding_x
+		y += style.padding_y
+		
+		handle_x = self._get_handle_x()
+
+		self._hovered = (mouse_x - x - handle_x) ** 2 + (mouse_y - y - style.slider_handle_radius) ** 2 <= style.slider_handle_radius ** 2
+
+		if not self._held and pressed and self._hovered:
+			self._held = True
+			IElement.pressed_element = self
+		elif self._held and not pressed:
+			self._held = False
+			IElement.pressed_element = None
+		elif self._held:
+			dx = mouse_x - x - handle_x
+			self._value += dx / (self._width - style.slider_handle_radius * 2) * (self._max - self._min)
+			self._value = min(self._max, max(self._min, self._value))
+			self._on_changed(self._value)
 
 	def render(self, screen):
 		super().render(screen)
 		x, y = self.get_position()
 		width, height = self.get_size()
-
 		style = self.get_style()
+
+		x += style.padding_x
+		y += style.padding_y
+		width -= style.padding_x * 2
+		height -= style.padding_y * 2
 
 		# Draw the slider track
 		draw_rect_opacity(
 			screen,
 			style.slider_track_color,
 			style.slider_track_opacity,
-			(x + style.slider_handle_radius, y + height // 2 - style.slider_track_width // 2, width - style.slider_handle_radius * 2, style.slider_track_width),
-			style.slider_track_width // 2
+			(x + style.slider_handle_radius, y + height // 2 - style.slider_track_width // 2, width - style.slider_handle_radius * 2, style.slider_track_width)
 		)
 
 		# Draw the slider handle
-		handle_x = (self._value - self._min) / (self._max - self._min) * (width - style.slider_handle_radius * 2) + style.slider_handle_radius
+		handle_x = self._get_handle_x()
 
-		draw_circle_opacity(
+		pygame.draw.circle(
 			screen,
 			style.slider_handle_color,
-			style.slider_handle_opacity,
 			(x + handle_x, y + height // 2),
 			style.slider_handle_radius
 		)
 
 		# Draw the slider handle border
-		draw_circle_opacity(
+		pygame.draw.circle(
 			screen,
 			style.slider_handle_border_color,
-			style.slider_handle_border_opacity,
 			(x + handle_x, y + height // 2),
 			style.slider_handle_radius,
 			style.slider_handle_border_width
@@ -81,3 +144,13 @@ class SliderElement(IElement):
 		height += style.slider_handle_radius * 2
 
 		return width, height
+	
+	def get_style(self) -> Style:
+		style = super().get_style()
+
+		if self._held:
+			style = style.updated(self._style_held)
+		elif self._hovered:
+			style = style.updated(self._style_hovered)
+
+		return style

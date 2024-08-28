@@ -1,6 +1,5 @@
 # https://noonat.github.io/intersect/
 from dataclasses import dataclass
-from typing import Optional
 from pygame.math import Vector2
 import pygame
 from abc import ABC, abstractmethod
@@ -16,7 +15,7 @@ class Hit:
 
 @dataclass
 class Sweep:
-	hit: Optional[Hit]
+	hit: Hit | None
 	pos: Vector2
 	time: float = 1.0
 

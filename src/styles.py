@@ -42,10 +42,3 @@ BUTTON_STYLE_PRESSED = Style(
 	border_color=COLOR_WHITE,
 	background_color=COLOR_WHITE,
 )
-
-
-DEBUG_STYLE = Style(
-	border_color=COLOR_RED,
-	border_width=1,
-	border_opacity=1,
-)

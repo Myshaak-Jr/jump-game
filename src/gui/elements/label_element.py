@@ -1,11 +1,10 @@
 import pygame
 from ..base import IElement
 from ..style import Style
-from typing import Optional
 
 
 class LabelElement(IElement):
-	def __init__(self, text: str, *, left: Optional[int] = None, right: Optional[int] = None, top: Optional[int] = None, bottom: Optional[int] = None, style: Style = Style()):
+	def __init__(self, text: str, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()):
 		super().__init__(
 			left=left,
 			right=right,
@@ -13,6 +12,12 @@ class LabelElement(IElement):
 			bottom=bottom,
 			style=style
 		)
+		self._text = text
+
+	def get_text(self) -> str:
+		return self._text
+	
+	def set_text(self, text: str) -> None:
 		self._text = text
 
 	def render(self, screen: pygame.Surface):

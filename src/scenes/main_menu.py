@@ -1,6 +1,7 @@
 import pygame
 from core import IScene, app_state, PlanetData
-from gui import ImageElement, LabelElement, ButtonModifier, ColumnContainer, Container, Style, HSeparatorElement, OffsetModifier
+from gui import ImageElement, LabelElement, ButtonModifier, Container, Style, HSeparatorElement, OffsetModifier
+from gui.containers.flex_container import Direction, FlexContainer
 import util.asset_manager as am
 import util.language_manager as lm
 import util.logger as log
@@ -36,7 +37,7 @@ class MainMenuScene(IScene):
 				right = 20,
 				bottom = 20
 			),
-			ColumnContainer(app_state.width / 2, min_gap = 25, left = app_state.width / 2 - 40, top = 30).with_children(
+			FlexContainer(app_state.width / 2, direction=Direction.COLUMN, gap = 25, left = app_state.width / 2 - 40, top = 30).with_children(
 				LabelElement(lm.get("general.title"), style=HEADER_STYLE),
 				OffsetModifier(HSeparatorElement(app_state.width // 2, color=COLOR_WHITE), 0, -15),
 				ButtonModifier(
@@ -58,7 +59,7 @@ class MainMenuScene(IScene):
 
 		pygame.display.set_caption(lm.get("general.title"))
 
-	def _handle_event(self, event: pygame.event.Event) -> None | IScene:
+	def handle_event(self, event: pygame.event.Event) -> None | IScene:
 		pass
  
 	def update(self, dt: float) -> None | IScene:

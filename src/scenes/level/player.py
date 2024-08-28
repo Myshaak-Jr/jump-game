@@ -4,7 +4,6 @@ from .collision import IHasAABB
 from core import PlanetData, PlayerData
 from pygame.math import Vector2
 import math
-from typing import Optional
 
 
 class Player(IHasAABB):
@@ -20,20 +19,20 @@ class Player(IHasAABB):
 
 		self.on_ground: bool = False
 
-	def set_position(self, x: float | Vector2, y: Optional[float] = None) -> None:
+	def set_position(self, x: float | Vector2, y: float | None = None) -> None:
 		self._pos = Vector2(x, y)
 		
-	def set_velocity(self, x: float | Vector2, y: Optional[float] = None) -> None:
+	def set_velocity(self, x: float | Vector2, y: float | None = None) -> None:
 		self._vel = Vector2(x, y)
 
-	def apply_impulse(self, impulse: Vector2) -> None:
-		self._impulse += impulse	
+	def apply_impulse(self, impulse: Vector2, y = None) -> None:
+		self._impulse += Vector2(impulse, y)
 	
 	def _apply_gravity(self) -> None:
 		self.apply_impulse(Vector2(0, self._planet_data.gravity))
 	
 	def _apply_drag(self) -> None:
-		self.apply_impulse(-self._vel * self._planet_data.drag)
+		self.apply_impulse(0, -self._vel.x * self._planet_data.drag)
 
 	def _integrate(self, dt: float) -> None:
 		self._vel += self._impulse * dt
@@ -45,7 +44,7 @@ class Player(IHasAABB):
 	def _calc_thrust_power(x: float, decay: float) -> float:
 		# https://www.geogebra.org/calculator/vtr4t243
 		if x > 0.0:
-			return math.exp(-x * decay) 
+			return math.exp(-x * decay)
 		else:
 			a = x * decay
 			return math.log(a**2 - a + 1) + 1

@@ -1,6 +1,20 @@
-from gui import SliderElement
+class A:
+	def foo():
+		pass
 
+class B:
+	def bar():
+		pass
 
-SliderElement(app_state.width / 4, min=0, max=100, default=100, step=1,
-	on_change=lambda value: log.info(f"Master volume: {value}")
-)
+def identity[T](a: T) -> T:
+	return a
+
+def main() -> int:
+	a = identity(A())
+	b = identity(B())
+
+	a.foo()
+	b.bar()
+
+	return 0
+

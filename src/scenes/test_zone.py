@@ -1,317 +1,160 @@
-from __future__ import annotations
-from core import IScene, app_state, PlanetData, LevelData
+from cgitb import text
+from core import IScene, app_state
 import pygame
-from gui import Container, LabelElement, Style
-from styles import LABEL_STYLE
-import util.language_manager as lm
-from enum import Enum
-from dataclasses import dataclass
-from typing import Optional
-from abc import ABC, abstractmethod
+from gui import Container, FlexContainer, Style, ButtonModifier, LabelElement, Alignment, Justification, Direction
+from random import randint
+from gui.elements.slider_element import SliderElement
+import util.asset_manager as am
 import util.logger as log
-import math
 
 
-GRAVITY_BASE = 20
-INPUT_IMPULSE_JUMP = 800
-INPUT_IMPULSE_UP = 100
-INPUT_IMPULSE_DOWN = 50
-INPUT_DECAY_SPEED = 1.0
+NUM_DUMMIES = 10
+
+WIDTH: int
+HEIGHT: int
+
+MIN_DUMMY_WIDTH: int
+MAX_DUMMY_WIDTH: int
+
+MIN_DUMMY_HEIGHT: int
+MAX_DUMMY_HEIGHT: int
+
+MAX_GAP = 40
+
+DUMMY_STYLE = Style(
+	border_color=(255, 0, 0),
+	border_width=2,
+	border_opacity=1,
+)
+
+def _create_dummy():
+	return Container(
+		width=randint(MIN_DUMMY_WIDTH, MAX_DUMMY_WIDTH),
+		height=randint(MIN_DUMMY_HEIGHT, MAX_DUMMY_HEIGHT),
+		style=DUMMY_STYLE
+	)
+
+BUTTON_STYLE = Style(
+	text_color=(0, 0, 0),
+	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 20),
+	background_color=(200, 200, 200),
+	background_opacity=1,
+	border_color=(35, 35, 35),
+	border_opacity=1,
+	border_width=2,
+	padding_x=5,
+	padding_y=5,
+)
+
+BUTTON_STYLE_HOVERED = Style(
+	background_color=(170, 170, 170),
+)
+
+BUTTON_STYLE_PRESSED = Style(
+	background_color=(120, 120, 120),
+)
 
 
-def _aabb(a: IHasAABB, b: IHasAABB) -> bool:
-	# Unpack the coordinates of the two AABBs
-	a_left, a_top, a_right, a_bottom = a.get_aabb()
-	b_left, b_top, b_right, b_bottom = b.get_aabb()
-	
-	return a_left < b_right and a_right > b_left and a_top < b_bottom and a_bottom > b_top
+DIRECTIONS = list(Direction)
+ALIGNMENTS = list(Alignment)
+JUSTIFICATIONS = list(Justification)
 
-def _sided_aabb(player: IHasAABB, obstacle: IHasAABB) -> Side:
-	if not _aabb(player, obstacle): return Side.NONE
 
-	TOLERANCE = 0.1
-
-	# Unpack the player and obstacle coordinates
-	p_left, p_top, p_right, p_bottom = player.get_aabb()
-	o_left, o_top, o_right, o_bottom = obstacle.get_aabb()
-	
-	# Calculate the half-widths and half-heights
-	p_half_width = (p_right - p_left) / 2
-	p_half_height = (p_bottom - p_top) / 2
-	o_half_width = (o_right - o_left) / 2
-	o_half_height = (o_bottom - o_top) / 2
-	
-	# Calculate the centers of the player and the obstacle
-	p_center_x = p_left + p_half_width
-	p_center_y = p_top + p_half_height
-	o_center_x = o_left + o_half_width
-	o_center_y = o_top + o_half_height
-	
-	# Calculate the difference between the centers
-	dx = p_center_x - o_center_x
-	dy = p_center_y - o_center_y
-	
-	# Calculate the minimum distances to separate along X and Y axes
-	combined_half_width = p_half_width + o_half_width
-	combined_half_height = p_half_height + o_half_height
-	
-	# Determine the collision side based on the minimum overlap
-	overlap_x = combined_half_width - abs(dx)
-	overlap_y = combined_half_height - abs(dy)
-	
-	if overlap_x + TOLERANCE < overlap_y:
-		# Collision on the left or right
-		if dx > 0:
-			return Side.LEFT
-		else:
-			return Side.RIGHT
-	else:
-		# Collision on the top or bottom
-		if dy > 0:
-			return Side.BOTTOM
-		else:
-			return Side.TOP
-
-class IHasAABB(ABC):
-	@abstractmethod
-	def get_aabb(self) -> tuple[float, float, float, float]: ...
-
-class Camera(IHasAABB):
-	def __init__(self, zoom: float = 1.0) -> None:
-		self._x = 0
-		self._y = 0
-		self._zoom = zoom
-
-	@property
-	def x(self) -> float:
-		return self._x
-	
-	@property
-	def y(self) -> float:
-		return self._y
-	
-	def zoom(self, delta: float) -> None:
-		self._zoom += delta
-		if self._zoom < 0.1:
-			self._zoom = 0.1
-		log.info(f"Zoom: {self._zoom}")
-
-	def follow_player(self, player: Player, level: LevelData) -> None:
-		RELATIVE_X = 0.2
-		RELATIVE_Y = 0.2
-		view_width = app_state.width / self._zoom
-		view_height = app_state.height / self._zoom
-		self._x = player.x - view_width * RELATIVE_X + player.width / 2
-		self._y = player.y - view_height * RELATIVE_Y + player.height / 2
-
-		# Clamp the camera to the level bounds
-		if self._x < 0:
-			self._x = 0
-		if self._y < 0:
-			self._y = 0
-		if self._x + view_width > level.width:
-			self._x = level.width - view_width
-		if self._y + view_height > level.height:
-			self._y = level.height - view_height
-	
-	def apply(self, x: float, y: float, width: float, height: float) -> tuple[int, int, int, int]:
-		new_x = math.floor((x - self._x) * self._zoom)
-		new_y = math.floor((y - self._y) * self._zoom)
-		new_w = math.ceil(width * self._zoom)
-		new_h = math.ceil(height * self._zoom)
-		return int(new_x), int(new_y), int(new_w), int(new_h)
-	
-	def get_aabb(self) -> tuple[float, float, float, float]:
-		return self._x, self._y, self._x + app_state.width / self._zoom, self._y + app_state.height / self._zoom
-
-	def clip(self, entity: IHasAABB) -> bool:
-		return not _aabb(self, entity)
-	
-class Tile(IHasAABB):
-	def __init__(self, x: float, y: float, width: float = 1, height: float = 1) -> None:
-		self.x = x
-		self.y = y
-		self.width = width
-		self.height = height
-
-	def get_aabb(self) -> tuple[float, float, float, float]:
-		"""Get the axis-aligned bounding box of the tile. The format is (left, top, right, bottom)."""
-		return self.x, self.y, self.x + self.width, self.y + self.height
-
-	def get_x(self) -> float:
-		return self.x
-
-	def get_y(self) -> float:
-		return self.y
-	
-	def get_width(self) -> float:
-		return self.width
-	
-	def get_height(self) -> float:
-		return self.height
-
-	def render(self, screen: pygame.Surface, camera: Camera) -> None:
-		if camera.clip(self): return
-		rect = camera.apply(self.x, self.y, self.width, self.height)
-		pygame.draw.rect(screen, (255, 255, 255), rect)
-
-class Player(IHasAABB):
+class TestZoneScene(IScene):
 	def __init__(self) -> None:
-		self.x: float = 0
-		self.y: float = 0
-		self.vel_x: float = 0
-		self.vel_y: float = 0
-		self.impulse_x: float = 0
-		self.impulse_y: float = 0
-		self.width: float = 0.3
-		self.height: float = 0.3
-		self.on_ground: bool = True
-		self.on_ceiling: bool = False
+		global WIDTH, HEIGHT, MIN_DUMMY_WIDTH, MAX_DUMMY_WIDTH, MIN_DUMMY_HEIGHT, MAX_DUMMY_HEIGHT
+		WIDTH = app_state.width * 9 // 10
+		HEIGHT = app_state.height * 9 // 10
 
-	def set_position(self, x: float, y: float) -> None:
-		self.x = x
-		self.y = y
+		MAX_DUMMY_WIDTH = WIDTH // 9
+		MAX_DUMMY_HEIGHT = HEIGHT // 9
 
-	def apply_impulse_y(self, y: float, dt: float) -> None:
-		self.vel_y += y * dt
-	
-	def set_velocity_x(self, x: float) -> None:
-		self.vel_x = x
-	
-	def apply_gravity_y(self, gravity: float, dt: float) -> None:
-		self.vel_y += gravity * GRAVITY_BASE * dt
-	
-	def apply_drag_y(self, drag: float, dt: float) -> None:
-		self.vel_y -= self.vel_y * drag * dt
+		MIN_DUMMY_WIDTH = MAX_DUMMY_WIDTH // 2
+		MIN_DUMMY_HEIGHT = MAX_DUMMY_HEIGHT // 2
 
-	def integrate(self, dt: float) -> None:
-		self.x += self.vel_x * dt
-		self.y += self.vel_y * dt
+		self.current_direction = 0
+		self.current_alignment = 0
+		self.current_justification = 0
 
-	def handle_input(self, dt: float) -> None:
-		key_state = pygame.key.get_pressed()
-
-		print(math.exp(-self.vel_y * INPUT_DECAY_SPEED))
-		if key_state[pygame.K_UP] or key_state[pygame.K_SPACE]:
-			if self.on_ground:
-				self.apply_impulse_y(-INPUT_IMPULSE_JUMP, dt)
-			else:
-				self.apply_impulse_y(-INPUT_IMPULSE_UP, dt)
-		if key_state[pygame.K_DOWN] or key_state[pygame.K_LSHIFT]:
-			self.apply_impulse_y(INPUT_IMPULSE_DOWN, dt)
-
-	def stop_y_movement(self, new_y: float) -> None:
-		self.vel_y = 0
-		self.y = new_y
-
-	def update(self, dt: float, planet: PlanetData) -> None:
-		self.handle_input(dt)
-		self.apply_gravity_y(planet.gravity, dt)
-		self.apply_drag_y(planet.drag, dt)
-		self.integrate(dt)
-	
-	def get_aabb(self) -> tuple[float, float, float, float]:
-		"""Get the axis-aligned bounding box of the player. The format is (left, top, right, bottom)."""
-		return self.x, self.y, self.x + self.width, self.y + self.height
-
-	def render(self, screen: pygame.Surface, camera: Camera) -> None:
-		if camera.clip(self): return
-		rect = camera.apply(self.x, self.y, self.width, self.height)
-		pygame.draw.ellipse(screen, (255, 0, 0), rect)
-
-class Side(Enum):
-    NONE = 0
-    TOP = 1
-    BOTTOM = 2
-    LEFT = 3
-    RIGHT = 4
-
-class LevelScene(IScene):
-	def __init__(self, planet: PlanetData) -> None:
-		self.planet = planet
-		
-		pygame.display.set_caption(lm.get("caption.driving_on").format(lm.get(self.planet.translation_key)))
-
-		self.gui = Container().with_children(
-			LabelElement(lm.get(planet.translation_key), style=LABEL_STYLE),
+		self._target = FlexContainer(
+			WIDTH, HEIGHT,
+			direction=DIRECTIONS[self.current_direction],
+			align=ALIGNMENTS[self.current_alignment],
+			justify=JUSTIFICATIONS[self.current_justification],
+			style=DUMMY_STYLE
+		).with_children(
+			_create_dummy()
+			for _ in range(NUM_DUMMIES)
 		)
-		
-		if planet.current_level >= len(planet.levels):
-			raise ValueError("Invalid level ID")
-		self.level = planet.levels[planet.current_level]
-		self.load_level()
 
-		self.camera = Camera(65)
+		self._target_wrapper = FlexContainer(app_state.width, app_state.height, justify=Justification.CENTER, align=Alignment.CENTER).with_children(
+			self._target
+		)
 
-		self.player = Player()
-		self.player.set_position(0.5 - self.player.width / 2, self.calc_start_y() - self.player.height)
-		self.player.set_velocity_x(self.planet.game_speed)
-
-	def calc_start_y(self) -> float:
-		for y in range(self.level.height):
-			if y == 0 or self.level.level_data[y-1][0] == "#":
-				continue
-			if self.level.level_data[y][0] == "#":
-				return y
-
-	def add_tile(self, x, y) -> None:
-		if y == 0:
-			self.tiles.append(Tile(x, y - 31, 1, 32)) # you can't fly over that
-		else:
-			self.tiles.append(Tile(x, y))
-
-	def load_level(self) -> None:
-		# TODO: possibly joid inner tiles into more bigger ones, this could optimize the collision detection and rendering
-		self.tiles: list[Tile] = []
-		for y in range(self.level.height):
-			for x in range(self.level.width):
-				if self.level.level_data[y][x] == "#":
-					self.add_tile(x, y)
-					
-
-	def _handle_event(self, event: pygame.event.Event) -> None: ...
+		self._tools = FlexContainer(direction=Direction.COLUMN, align=Alignment.END, gap=10, right=10, top=10).with_children(
+			ButtonModifier(
+				LabelElement("Change direction"),
+				on_click=self._update_direction,
+				style=BUTTON_STYLE,
+				style_hovered=BUTTON_STYLE_HOVERED,
+				style_pressed=BUTTON_STYLE_PRESSED
+			),
+			ButtonModifier(
+				LabelElement("Change alignment"),
+				on_click=self._update_alignment,
+				style=BUTTON_STYLE,
+				style_hovered=BUTTON_STYLE_HOVERED,
+				style_pressed=BUTTON_STYLE_PRESSED
+			),
+			ButtonModifier(
+				LabelElement("Change justification"),
+				on_click=self._update_justification,
+				style=BUTTON_STYLE,
+				style_hovered=BUTTON_STYLE_HOVERED,
+				style_pressed=BUTTON_STYLE_PRESSED
+			),
+			SliderElement(
+				width=200,
+				min_value=0,
+				max_value=MAX_GAP,
+				default=10,
+				on_changed=self._update_gap,
+			)
+		)
 	
-	def kill(self) -> None:
-		app_state.queue_scene("game_over", self.planet)
+	def _update_alignment(self) -> None:
+		self.current_alignment = (self.current_alignment + 1) % len(ALIGNMENTS)
+		log.info(f"Changing alignment to {ALIGNMENTS[self.current_alignment]}")
+		self._target.set_alignment(ALIGNMENTS[self.current_alignment])
+	
+	def _update_justification(self) -> None:
+		self.current_justification = (self.current_justification + 1) % len(JUSTIFICATIONS)
+		log.info(f"Changing justification to {JUSTIFICATIONS[self.current_justification]}")
+		self._target.set_justification(JUSTIFICATIONS[self.current_justification])
+	
+	def _update_direction(self) -> None:
+		self.current_direction = (self.current_direction + 1) % len(DIRECTIONS)
+		log.info(f"Changing direction to {DIRECTIONS[self.current_direction]}")
+		self._target.set_direction(DIRECTIONS[self.current_direction])
 
-	def collide(self) -> None:
-		if self.player.y > self.level.height:
-			self.kill()
+	def _update_gap(self, value: float) -> None:
+		self._target.set_gap(value)
 
-		for tile in self.tiles:
-			side = _sided_aabb(self.player, tile)
-			if side == Side.TOP:
-				self.player.stop_y_movement(tile.get_y() + tile.get_height())
-				self.player.on_ground = True
-			else:
-				self.player.on_ground = False
-			if side == Side.BOTTOM:
-				self.player.stop_y_movement(tile.get_y() - self.player.height)
-				self.player.on_ceiling = True
-			else:
-				self.player.on_ceiling = False
-			
-			if side == Side.LEFT or side == Side.RIGHT:
-				self.kill()
+	def handle_event(self, event: pygame.event.Event) -> None:
+		pass
 
-	def update(self, dt: float) -> None:
-		self.player.update(dt, self.planet)
-		self.collide()
-		self.gui.update(dt)
-		self.camera.follow_player(self.player, self.level)
+	def update(self, dt: float) -> None | IScene:
+		self._target_wrapper.update(dt)
+		self._tools.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:
-		screen.fill((0, 0, 0))
+		screen.fill((255, 255, 255))
 
-		for tile in self.tiles:
-			tile.render(screen, self.camera)
-
-		self.player.render(screen, self.camera)
-
-		#self.gui.render(screen)
+		self._target_wrapper.render(screen)
+		self._tools.render(screen)
 
 		pygame.display.flip()
-	
+
 	@classmethod
 	def get_name(cls) -> str:
-		return "level"
+		return "test_zone"
