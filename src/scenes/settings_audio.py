@@ -1,3 +1,4 @@
+from typing import override
 import pygame
 from core import IScene, app_state
 from gui import ImageElement, LabelElement, ButtonModifier, Container, Style, Alignment, SliderElement
@@ -20,7 +21,7 @@ class AudioSettingsScene(IScene):
 			self.last_planet = app_state.get_planet_data(0)
 
 		# create the GUI
-		self.gui = Container(width=app_state.get_width(), height=app_state.get_height()).with_children(
+		self._gui = Container(width=app_state.get_width(), height=app_state.get_height()).with_children(
 			ImageElement(am.get_image("assets/image/gui/background.png", app_state.get_width())),
 			ImageElement(am.get_image("assets/image/gui/moon.png", app_state.get_width() // 2), top = -25, left = -25),
 			ButtonModifier(
@@ -53,15 +54,23 @@ class AudioSettingsScene(IScene):
 		pass
  
 	def update(self, dt: float) -> None:
-		self.gui.update(dt)
+		self._gui.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:
 		screen.fill((0, 0, 0))
 
-		self.gui.render(screen)
+		self._gui.render(screen)
 
 		pygame.display.flip()
 	
 	@classmethod
 	def get_name(cls) -> str:
 		return "settings_video"
+
+	@override
+	def on_enter(self) -> None:
+		pass
+
+	@override
+	def on_exit(self) -> None:
+		self._gui.on_scene_exit()

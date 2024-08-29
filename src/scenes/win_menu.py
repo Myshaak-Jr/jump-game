@@ -1,3 +1,4 @@
+from typing import override
 from core import IScene, app_state
 import pygame
 from gui import Container, LabelElement, Style, ButtonModifier, OffsetModifier, HSeparatorElement
@@ -5,7 +6,6 @@ from gui.containers.flex_container import Direction, FlexContainer
 from styles import HEADER_STYLE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, COLOR_WHITE
 import util.language_manager as lm
 from .level import LevelScene
-import util.logger as log
 
 
 class WinMenuScene(IScene):
@@ -13,14 +13,14 @@ class WinMenuScene(IScene):
 		self.last_level = last_level
 
 		# create the GUI
-		self.gui = Container(width=app_state.get_width(), height=app_state.get_height(), style=Style()).with_children(
+		self._gui = Container(width=app_state.get_width(), height=app_state.get_height(), style=Style()).with_children(
 			FlexContainer(app_state.get_width(), direction=Direction.COLUMN, gap = 25, top = app_state.get_height() / 4).with_children(
 				LabelElement(lm.get("gui.label.win"), style=HEADER_STYLE),
 				OffsetModifier(HSeparatorElement(app_state.get_width() // 2, color=COLOR_WHITE), 0, -15),
 				FlexContainer(app_state.get_height() / 20, gap = 25).with_children(
 					ButtonModifier(
 						LabelElement(lm.get("gui.button.next_level")),
-						on_click=lambda: log.info("Next level"),
+						on_click=lambda: app_state.queue_scene("level", self.last_level.get_planet()),
 						style=BUTTON_STYLE,
 						style_hovered=BUTTON_STYLE_HOVERED,
 						style_pressed=BUTTON_STYLE_PRESSED
@@ -48,17 +48,25 @@ class WinMenuScene(IScene):
 				app_state.queue_scene(self.last_level)
 	
 	def update(self, dt: float) -> None:
-		self.gui.update(dt)
+		self._gui.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:
 		screen.fill((0, 0, 0))
 
 		self.last_level.render_game_content(screen)
 		screen.blit(self.darken, (0, 0))
-		self.gui.render(screen)
+		self._gui.render(screen)
 
 		pygame.display.flip()
 
 	@classmethod
 	def get_name(cls) -> str:
 		return "win_menu"
+
+	@override
+	def on_enter(self) -> None:
+		pass
+
+	@override
+	def on_exit(self) -> None:
+		self._gui.on_scene_exit()

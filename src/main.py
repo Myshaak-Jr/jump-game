@@ -6,7 +6,6 @@ import util.logger as log
  
 
 def main() -> int:
-	app_state.set_debug()
 	app_state.set_window_size(1920 // 2, 1080 // 2)
 	app_state.register_scene(MainMenuScene)
 	app_state.register_scene(LevelScene)

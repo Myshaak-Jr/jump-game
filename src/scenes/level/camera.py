@@ -1,4 +1,4 @@
-from .collision import IHasAABB, AABB, aabb
+from .collision import IHasAABB, aabb
 from core import app_state, LevelData
 import math
 import pygame

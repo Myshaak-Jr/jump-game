@@ -3,7 +3,7 @@ import pygame
 from abc import ABC
 from .style import AnyStyle, FullStyle, DEFAULT_STYLE
 from core import app_state
-from typing import Self, overload
+from typing import Self, overload, override
 from collections.abc import Iterable
 from util.draw import draw_rect_opacity
 
@@ -146,6 +146,10 @@ class GUIElement:
 				style.border_width,
 				border_radius=style.border_radius
 			)
+	
+	def on_scene_exit(self) -> None:
+		if GUIElement.pressed_element == self:
+			GUIElement.pressed_element = None
 
 class IModifier(ABC):
 	def get_offset(self) -> tuple[float, float]:
@@ -223,6 +227,11 @@ class ISingleModifier(GUIElement, IModifier):
 	def get_modifier(self) -> IModifier | None:
 		return self._modifier
 
+	@override
+	def on_scene_exit(self) -> None:
+		super().on_scene_exit()
+		self._target.on_scene_exit()
+
 class IContainer(GUIElement):
 	def __init__(self, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: AnyStyle | None = None):
 		super().__init__(
@@ -264,3 +273,9 @@ class IContainer(GUIElement):
 		return self._children
 	
 	def get_independent_size(self) -> tuple[float, float]: ...
+
+	def on_scene_exit(self) -> None:
+		super().on_scene_exit()
+		
+		for child in self._children:
+			child.on_scene_exit()

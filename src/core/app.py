@@ -51,22 +51,30 @@ class App:
 		Returns:
 			None
 		"""
+
+	
+
+		if scene is None:
+			raise ValueError("Scene cannot be None")
+
+		if self._scene:
+			self._scene.on_exit()
 		
 		if isinstance(scene, IScene):
 			self._scene = scene
 			log.info(f"Switching back to scene '{scene.get_name()}'")
-
 		elif isinstance(scene, str):
 			if not app_state.has_scene(scene):
 				raise ValueError(f"Attemped to queue unknown scene {scene}")
 			self._scene = app_state.get_scene(scene)(*args, **kwargs)
 			log.info(f"Switching to a new scene '{scene}'")
-
-		elif isinstance(scene, NewSceneData):
+		else:
 			if not app_state.has_scene(scene.name):
 				raise ValueError(f"Attemped to queue unknown scene {scene.name}")
 			self._scene = app_state.get_scene(scene.name)(*scene.args, **scene.kwargs)
 			log.info(f"Switching to a new scene '{scene.name}'")
+		
+		self._scene.on_enter()
 		
 	@overload
 	def run(self, scene: None) -> None: ...

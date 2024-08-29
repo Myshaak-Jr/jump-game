@@ -1,3 +1,4 @@
+from typing import override
 from core import IScene, app_state
 import pygame
 from gui import Container, FlexContainer, Style, ButtonModifier, LabelElement, Alignment, Justification, Direction
@@ -157,3 +158,12 @@ class TestZoneScene(IScene):
 	@classmethod
 	def get_name(cls) -> str:
 		return "test_zone"
+	
+	@override
+	def on_enter(self) -> None:
+		pass
+
+	@override
+	def on_exit(self) -> None:
+		self._target_wrapper.on_scene_exit()
+		self._tools.on_scene_exit()

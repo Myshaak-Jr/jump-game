@@ -1,3 +1,4 @@
+from typing import overload
 import pygame
 from .camera import Camera
 from .collision import IHasAABB
@@ -19,14 +20,41 @@ class Player(IHasAABB):
 
 		self.on_ground: bool = False
 
-	def set_position(self, x: float | Vector2, y: float | None = None) -> None:
-		self._pos = Vector2(x, y)
-		
-	def set_velocity(self, x: float | Vector2, y: float | None = None) -> None:
-		self._vel = Vector2(x, y)
+	@overload
+	def set_position(self, x: float, y: float) -> None: ...
 
-	def apply_impulse(self, impulse: Vector2, y = None) -> None:
-		self._impulse += Vector2(impulse, y)
+	@overload
+	def set_position(self, x: Vector2) -> None: ...
+
+	def set_position(self, x: float | Vector2, y: float | None = None) -> None:
+		if isinstance(x, Vector2):
+			self._pos = x
+		else:
+			self._pos = Vector2(x)
+	
+	@overload
+	def set_velocity(self, x: float, y: float) -> None: ...
+
+	@overload
+	def set_velocity(self, x: Vector2) -> None: ...
+
+	def set_velocity(self, x: float | Vector2, y: float | None = None) -> None:
+		if isinstance(x, Vector2):
+			self._vel = x
+		else:
+			self._vel = Vector2(x)
+
+	@overload
+	def apply_impulse(self, x: float, y: float) -> None: ...
+
+	@overload
+	def apply_impulse(self, x: Vector2) -> None: ...
+
+	def apply_impulse(self, x: Vector2 | float, y: float | None = None) -> None:
+		if isinstance(x, Vector2):
+			self._impulse += x
+		else:
+			self._impulse += Vector2(x)
 	
 	def _apply_gravity(self) -> None:
 		self.apply_impulse(Vector2(0, self._planet_data.gravity))

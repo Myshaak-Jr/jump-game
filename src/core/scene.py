@@ -26,3 +26,9 @@ class IScene(ABC):
 	@classmethod
 	@abstractmethod
 	def get_name(cls) -> str: ...
+
+	@abstractmethod
+	def on_enter(self) -> None: ...
+
+	@abstractmethod
+	def on_exit(self) -> None: pass

@@ -1,3 +1,4 @@
+from typing import override
 import pygame
 from core import IScene
 from core import app_state
@@ -13,14 +14,14 @@ class GameOverScene(IScene):
 		self.last_level = last_level
 
 		# create the GUI
-		self.gui = Container(width=app_state.get_width(), height=app_state.get_height(), style=Style()).with_children(
+		self._gui = Container(width=app_state.get_width(), height=app_state.get_height(), style=Style()).with_children(
 			FlexContainer(app_state.get_width(), direction=Direction.COLUMN, gap = 25, top = app_state.get_height() / 4).with_children(
 				LabelElement(lm.get("gui.label.game_over"), style=HEADER_STYLE),
 				OffsetModifier(HSeparatorElement(app_state.get_width() // 2, color=COLOR_WHITE), 0, -15),
 				FlexContainer(app_state.get_height() / 20, gap = 25).with_children(
 					ButtonModifier(
 						LabelElement(lm.get("gui.button.retry")),
-						on_click=lambda: app_state.queue_scene("level", self.last_level.planet),
+						on_click=lambda: app_state.queue_scene("level", self.last_level.get_planet()),
 						style=BUTTON_STYLE,
 						style_hovered=BUTTON_STYLE_HOVERED,
 						style_pressed=BUTTON_STYLE_PRESSED
@@ -46,7 +47,7 @@ class GameOverScene(IScene):
 		pass
  
 	def update(self, dt: float) -> None:
-		self.gui.update(dt)
+		self._gui.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:
 		screen.fill((0, 0, 0))
@@ -55,10 +56,18 @@ class GameOverScene(IScene):
 
 		screen.blit(self.darken, (0, 0))
 
-		self.gui.render(screen)
+		self._gui.render(screen)
 
 		pygame.display.flip()
 	
 	@classmethod
 	def get_name(cls) -> str:
 		return "game_over"
+
+	@override
+	def on_enter(self) -> None:
+		pass
+
+	@override
+	def on_exit(self) -> None:
+		self._gui.on_scene_exit()
