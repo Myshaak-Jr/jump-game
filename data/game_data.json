@@ -1,6 +1,6 @@
 {
 	"player": {
-		"thrust": 400.0,
+		"thrust": 170.0,
 		"thrust_decay": 0.1
 	},
 	"planets": [
