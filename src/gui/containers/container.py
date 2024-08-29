@@ -5,8 +5,8 @@ from ..style import AnyStyle
 
 class Container(IContainer):
 	def __init__(self, width: float | str = "auto", height: float | str = "auto", *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: AnyStyle | None = None) -> None:
-		self._width = width
-		self._height = height
+		self.set_width(width)
+		self.set_height(height)
 		super().__init__(
 			left=left,
 			right=right,
@@ -25,10 +25,10 @@ class Container(IContainer):
 			child.render(screen)
 
 	def set_width(self, width: float | str) -> None:
-		self._width = width
+		self._width = width if isinstance(width, str) else float(width)
 
 	def set_height(self, height: float | str) -> None:
-		self._height = height	
+		self._height = height if isinstance(height, str) else float(height)
 
 	def get_size(self) -> tuple[float, float]:
 		width, height = 0, 0

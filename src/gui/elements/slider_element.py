@@ -36,11 +36,11 @@ class SliderElement(GUIElement):
 			bottom=bottom,
 			style=style
 		)
-		self._width = width
-		self._min = min_value
-		self._max = max_value
-		self._value = min(max_value, max(min_value, default))
-		self._step = step
+		self._width = float(width)
+		self._min = float(min_value)
+		self._max = float(max_value)
+		self._value = min(self._max, max(self._min, float(default)))
+		self._step = float(step)
 		self._on_changed = on_changed
 		self._held = False
 

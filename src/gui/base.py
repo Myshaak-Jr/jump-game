@@ -78,10 +78,10 @@ class GUIElement:
 		return pos
 	
 	def set_position(self, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None) -> None:
-		self._left = left
-		self._right = right
-		self._top = top
-		self._bottom = bottom
+		self._left = float(left) if left is not None else None
+		self._right = float(right) if right is not None else None
+		self._top = float(top) if top is not None else None
+		self._bottom = float(bottom) if bottom is not None else None
 
 	def set_modifier(self, modifier: IModifier | None) -> None:
 		self._modifier = modifier
