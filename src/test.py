@@ -1,10 +1,8 @@
 class A:
-	def foo():
-		pass
+	def foo(self) -> None: ...
 
 class B:
-	def bar():
-		pass
+	def bar(self) -> None: ...
 
 def identity[T](a: T) -> T:
 	return a

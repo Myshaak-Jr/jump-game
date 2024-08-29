@@ -1,11 +1,11 @@
 import pygame
-from core import IScene, app_state, PlanetData
+from core import IScene, app_state
 from gui import ImageElement, LabelElement, ButtonModifier, Container, Style, HSeparatorElement, OffsetModifier
 from gui.containers.flex_container import Direction, FlexContainer
 import util.asset_manager as am
 import util.language_manager as lm
 import util.logger as log
-from styles import FOOTER_STYLE, COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, BUTTON_STYLE_PRESSED, HEADER_STYLE
+from styles import FOOTER_STYLE, COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, HEADER_STYLE
 import json
 
 
@@ -59,10 +59,10 @@ class MainMenuScene(IScene):
 
 		pygame.display.set_caption(lm.get("general.title"))
 
-	def handle_event(self, event: pygame.event.Event) -> None | IScene:
+	def handle_event(self, event: pygame.event.Event) -> None:
 		pass
  
-	def update(self, dt: float) -> None | IScene:
+	def update(self, dt: float) -> None:
 		self.gui.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:

@@ -1,6 +1,6 @@
 from core import IScene, app_state
 import pygame
-from gui import Container, LabelElement, Style, ButtonModifier, OffsetModifier, HSeparatorElement, Alignment
+from gui import Container, LabelElement, Style, ButtonModifier, OffsetModifier, HSeparatorElement
 from gui.containers.flex_container import Direction, FlexContainer
 from styles import HEADER_STYLE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, COLOR_WHITE
 import util.language_manager as lm

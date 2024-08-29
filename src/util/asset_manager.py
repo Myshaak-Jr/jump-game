@@ -1,21 +1,10 @@
-from typing import overload
 import pygame
 
 
 _images: dict[str, pygame.Surface] = {}
-_fonts: dict[tuple[str, int], pygame.font.Font] = {}
+_fonts: dict[tuple[str | None, int], pygame.font.Font] = {}
 
-
-@overload
-def get_image(path: str, size: float) -> pygame.Surface: ...
-
-@overload
-def get_image(path: str, size: tuple[float, float]) -> pygame.Surface: ...
-
-@overload
-def get_image(path: str, size: pygame.Vector2) -> pygame.Surface: ...
-
-def get_image(path: str, size: float | tuple[float, float] | pygame.Vector2) -> pygame.Surface:
+def get_image(path: str, size: float | tuple[float, float] | pygame.Vector2 | None) -> pygame.Surface:
 	if path not in _images:
 		_images[path] = pygame.image.load(path).convert_alpha()
 	image = _images[path]

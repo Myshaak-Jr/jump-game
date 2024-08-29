@@ -1,11 +1,11 @@
 import pygame
-from core import IScene, app_state, PlanetData
-from gui import ImageElement, LabelElement, ButtonModifier, Container, Style, HSeparatorElement, OffsetModifier, Alignment, SliderElement
+from core import IScene, app_state
+from gui import ImageElement, LabelElement, ButtonModifier, Container, Style, Alignment, SliderElement
 from gui.containers.flex_container import Direction, FlexContainer, Justification
 import util.asset_manager as am
 import util.language_manager as lm
 import util.logger as log
-from styles import COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, BUTTON_STYLE_PRESSED, LABEL_STYLE, HEADER_STYLE
+from styles import LABEL_STYLE
 import json
 
 

@@ -1,12 +1,10 @@
 import pygame
 from core import IScene
-from core.app_state_module import app_state, PlanetData
-from gui import ImageElement, LabelElement, ButtonModifier, Container, Style, HSeparatorElement, OffsetModifier, Alignment
+from core.app_state_module import app_state
+from gui import LabelElement, ButtonModifier, Container, Style, HSeparatorElement, OffsetModifier
 from gui.containers.flex_container import Direction, FlexContainer
-import util.asset_manager as am
 import util.language_manager as lm
-import util.logger as log
-from styles import COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, BUTTON_STYLE_PRESSED, LABEL_STYLE, HEADER_STYLE
+from styles import COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, HEADER_STYLE
 from .level import LevelScene
 
 
@@ -44,10 +42,10 @@ class GameOverScene(IScene):
 		self.darken.fill((0, 0, 0))
 		self.darken.set_alpha(128)
 
-	def handle_event(self, event: pygame.event.Event) -> None | IScene:
+	def handle_event(self, event: pygame.event.Event) -> None:
 		pass
  
-	def update(self, dt: float) -> None | IScene:
+	def update(self, dt: float) -> None:
 		self.gui.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:

@@ -1,8 +1,7 @@
-from cgitb import text
 from core import IScene, app_state
 import pygame
 from gui import Container, FlexContainer, Style, ButtonModifier, LabelElement, Alignment, Justification, Direction
-from random import randint
+from random import random
 from gui.elements.slider_element import SliderElement
 import util.asset_manager as am
 import util.logger as log
@@ -10,14 +9,14 @@ import util.logger as log
 
 NUM_DUMMIES = 10
 
-WIDTH: int
-HEIGHT: int
+flex_width: float
+flex_height: float
 
-MIN_DUMMY_WIDTH: int
-MAX_DUMMY_WIDTH: int
+min_dummy_width: float
+min_dummy_height: float
 
-MIN_DUMMY_HEIGHT: int
-MAX_DUMMY_HEIGHT: int
+max_dummy_width: float
+max_dummy_height: float
 
 MAX_GAP = 40
 
@@ -29,8 +28,8 @@ DUMMY_STYLE = Style(
 
 def _create_dummy():
 	return Container(
-		width=randint(MIN_DUMMY_WIDTH, MAX_DUMMY_WIDTH),
-		height=randint(MIN_DUMMY_HEIGHT, MAX_DUMMY_HEIGHT),
+		width=random() * (max_dummy_width - min_dummy_width) + min_dummy_width,
+		height=random() * (max_dummy_height - min_dummy_height) + min_dummy_height,
 		style=DUMMY_STYLE
 	)
 
@@ -62,22 +61,22 @@ JUSTIFICATIONS = list(Justification)
 
 class TestZoneScene(IScene):
 	def __init__(self) -> None:
-		global WIDTH, HEIGHT, MIN_DUMMY_WIDTH, MAX_DUMMY_WIDTH, MIN_DUMMY_HEIGHT, MAX_DUMMY_HEIGHT
-		WIDTH = app_state.width * 9 // 10
-		HEIGHT = app_state.height * 9 // 10
+		global flex_width, flex_height, min_dummy_width, max_dummy_width, max_dummy_width, max_dummy_height
+		flex_width = app_state.width * 9 / 10
+		flex_height = app_state.height * 9 / 10
 
-		MAX_DUMMY_WIDTH = WIDTH // 9
-		MAX_DUMMY_HEIGHT = HEIGHT // 9
+		max_dummy_width = flex_width / 9
+		max_dummy_height = flex_height / 9
 
-		MIN_DUMMY_WIDTH = MAX_DUMMY_WIDTH // 2
-		MIN_DUMMY_HEIGHT = MAX_DUMMY_HEIGHT // 2
+		min_dummy_width = max_dummy_width / 2
+		max_dummy_width = max_dummy_height / 2
 
 		self.current_direction = 0
 		self.current_alignment = 0
 		self.current_justification = 0
 
 		self._target = FlexContainer(
-			WIDTH, HEIGHT,
+			flex_width, flex_height,
 			direction=DIRECTIONS[self.current_direction],
 			align=ALIGNMENTS[self.current_alignment],
 			justify=JUSTIFICATIONS[self.current_justification],
@@ -143,7 +142,7 @@ class TestZoneScene(IScene):
 	def handle_event(self, event: pygame.event.Event) -> None:
 		pass
 
-	def update(self, dt: float) -> None | IScene:
+	def update(self, dt: float) -> None:
 		self._target_wrapper.update(dt)
 		self._tools.update(dt)
 

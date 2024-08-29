@@ -4,7 +4,7 @@ from . import logger as log
 
 
 _languages: dict[str, dict[str, str]] = {}
-_current_language = None
+_current_language: str | None = None
 
 def init() -> None:
 	"""Loads the languages."""
@@ -32,6 +32,8 @@ def set_language(language: str) -> None:
 
 def get_current_language() -> str:
 	"""Returns the current language."""
+	if _current_language is None:
+		raise ValueError("No language set")
 	return _current_language
 
 def get_languages() -> list[str]:
