@@ -22,7 +22,9 @@ __all__ = [
 	"start",
 	"queue_stop",
 	"get_player_data",
-	"get_planet_data"
+	"get_planet_data",
+	"set_debug",
+	"is_debug",
 ]
 
 
@@ -184,6 +186,14 @@ def get_player_data() -> PlayerData:
 
 def get_planet_data(id: int) -> PlanetData:
 	return _planet_data[id]
+
+def set_debug() -> None:
+	global _debug
+	_debug = True
+	log.enable()
+
+def is_debug() -> bool:
+	return _debug
 
 # initialize the app state
 _init()
