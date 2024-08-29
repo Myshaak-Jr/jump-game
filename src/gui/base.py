@@ -33,12 +33,12 @@ class GUIElement:
 	def _get_parent_width(self) -> float:
 		if self._parent:
 			return self._parent.get_independent_size()[0]
-		return app_state.width
+		return app_state.get_width()
 	
 	def _get_parent_height(self) -> float:
 		if self._parent:
 			return self._parent.get_independent_size()[1]
-		return app_state.height
+		return app_state.get_height()
 
 	def _get_left(self) -> float:
 		if self._left is not None:

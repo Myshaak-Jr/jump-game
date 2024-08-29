@@ -20,11 +20,11 @@ class MainMenuScene(IScene):
 			self.last_planet = app_state.get_planet_data(0)
 
 		# create the GUI
-		self.gui = Container(width=app_state.width, height=app_state.height).with_children(
-			ImageElement(am.get_image("assets/image/gui/background.png", app_state.width)),
-			ImageElement(am.get_image("assets/image/gui/moon.png", app_state.width // 2), top = -25, left = -25),
+		self.gui = Container(width=app_state.get_width(), height=app_state.get_height()).with_children(
+			ImageElement(am.get_image("assets/image/gui/background.png", app_state.get_width())),
+			ImageElement(am.get_image("assets/image/gui/moon.png", app_state.get_width() // 2), top = -25, left = -25),
 			ButtonModifier(
-				ImageElement(am.get_image("assets/image/gui/settings.png", app_state.width * 0.1)),
+				ImageElement(am.get_image("assets/image/gui/settings.png", app_state.get_width() * 0.1)),
 				on_click = lambda: app_state.queue_scene("settings_video"),
 				left = 20,
 				bottom = 20,
@@ -37,9 +37,9 @@ class MainMenuScene(IScene):
 				right = 20,
 				bottom = 20
 			),
-			FlexContainer(app_state.width / 2, direction=Direction.COLUMN, gap = 25, left = app_state.width / 2 - 40, top = 30).with_children(
+			FlexContainer(app_state.get_width() / 2, direction=Direction.COLUMN, gap = 25, left = app_state.get_width() / 2 - 40, top = 30).with_children(
 				LabelElement(lm.get("general.title"), style=HEADER_STYLE),
-				OffsetModifier(HSeparatorElement(app_state.width // 2, color=COLOR_WHITE), 0, -15),
+				OffsetModifier(HSeparatorElement(app_state.get_width() // 2, color=COLOR_WHITE), 0, -15),
 				ButtonModifier(
 					LabelElement(lm.get("gui.button.play")),
 					on_click=lambda: app_state.queue_scene("level", self.last_planet),

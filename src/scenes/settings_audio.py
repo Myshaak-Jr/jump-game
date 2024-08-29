@@ -20,11 +20,11 @@ class AudioSettingsScene(IScene):
 			self.last_planet = app_state.get_planet_data(0)
 
 		# create the GUI
-		self.gui = Container(width=app_state.width, height=app_state.height).with_children(
-			ImageElement(am.get_image("assets/image/gui/background.png", app_state.width)),
-			ImageElement(am.get_image("assets/image/gui/moon.png", app_state.width // 2), top = -25, left = -25),
+		self.gui = Container(width=app_state.get_width(), height=app_state.get_height()).with_children(
+			ImageElement(am.get_image("assets/image/gui/background.png", app_state.get_width())),
+			ImageElement(am.get_image("assets/image/gui/moon.png", app_state.get_width() // 2), top = -25, left = -25),
 			ButtonModifier(
-				ImageElement(am.get_image("assets/image/gui/arrow_back.png", app_state.width // 10)),
+				ImageElement(am.get_image("assets/image/gui/arrow_back.png", app_state.get_width() // 10)),
 				on_click = lambda: app_state.queue_scene("main_menu"),
 				left = 20,
 				bottom = 20,
@@ -37,10 +37,10 @@ class AudioSettingsScene(IScene):
 				right = 20,
 				bottom = 20
 			),
-			FlexContainer(app_state.width // 2, direction=Direction.COLUMN, align=Alignment.START, gap = 25, left = app_state.width // 2 - 40, top = 200).with_children(
-				FlexContainer(app_state.width // 2, justify=Justification.SPACE_BETWEEN).with_children(
+			FlexContainer(app_state.get_width() // 2, direction=Direction.COLUMN, align=Alignment.START, gap = 25, left = app_state.get_width() // 2 - 40, top = 200).with_children(
+				FlexContainer(app_state.get_width() // 2, justify=Justification.SPACE_BETWEEN).with_children(
 					LabelElement(lm.get("gui.label.audio.master"), style=LABEL_STYLE),
-					SliderElement(min_value=0, max_value=100, default=100, step=1, width=app_state.width / 4,
+					SliderElement(min_value=0, max_value=100, default=100, step=1, width=app_state.get_width() / 4,
 						on_changed=lambda value: log.info(f"Master volume: {value}")
 					)
 				)

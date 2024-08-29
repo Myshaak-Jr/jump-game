@@ -62,8 +62,8 @@ JUSTIFICATIONS = list(Justification)
 class TestZoneScene(IScene):
 	def __init__(self) -> None:
 		global flex_width, flex_height, min_dummy_width, max_dummy_width, max_dummy_width, max_dummy_height
-		flex_width = app_state.width * 9 / 10
-		flex_height = app_state.height * 9 / 10
+		flex_width = app_state.get_width() * 9 / 10
+		flex_height = app_state.get_height() * 9 / 10
 
 		max_dummy_width = flex_width / 9
 		max_dummy_height = flex_height / 9
@@ -86,7 +86,7 @@ class TestZoneScene(IScene):
 			for _ in range(NUM_DUMMIES)
 		)
 
-		self._target_wrapper = FlexContainer(app_state.width, app_state.height, justify=Justification.CENTER, align=Alignment.CENTER).with_children(
+		self._target_wrapper = FlexContainer(app_state.get_width(), app_state.get_height(), justify=Justification.CENTER, align=Alignment.CENTER).with_children(
 			self._target
 		)
 

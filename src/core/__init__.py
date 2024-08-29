@@ -1,14 +1,14 @@
-from .app_state_module import AppState, app_state, PlanetData, LevelData, PlayerData, NewSceneData
+from . import app_state
 from .app import App
 from .scene import IScene
+from .structs import NewSceneData, PlayerData, PlanetData, LevelData
 
 __all__ = [
-	"AppState",
 	"app_state",
-	"PlanetData",
-	"LevelData",
-	"PlayerData",
-	"NewSceneData",
 	"App",
-	"IScene"
+	"IScene",
+	"NewSceneData",
+	"PlayerData",
+	"PlanetData",
+	"LevelData"
 ]

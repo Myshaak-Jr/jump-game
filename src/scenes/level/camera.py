@@ -31,8 +31,8 @@ class Camera(IHasAABB):
 
 		obj_rect = obj.get_rect()
 
-		view_width = app_state.width / self._zoom
-		view_height = app_state.height / self._zoom
+		view_width = app_state.get_width() / self._zoom
+		view_height = app_state.get_height() / self._zoom
 		self._x = obj_rect.x - view_width * RELATIVE_X + obj_rect.width / 2
 		self._y = obj_rect.y - view_height * RELATIVE_Y + obj_rect.height / 2
 
@@ -63,10 +63,10 @@ class Camera(IHasAABB):
 		return self._y
 	
 	def get_width(self) -> float:
-		return app_state.width / self._zoom
+		return app_state.get_width() / self._zoom
 	
 	def get_height(self) -> float:
-		return app_state.height / self._zoom
+		return app_state.get_height() / self._zoom
 
 	def clip(self, entity: IHasAABB) -> bool:
 		return not aabb(self, entity)

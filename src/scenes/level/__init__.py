@@ -19,7 +19,7 @@ class LevelScene(IScene):
 
 		self._gui = Container().with_children(
 			ButtonModifier(
-				ImageElement(am.get_image("assets/image/gui/pause.png", app_state.width * 0.1)),
+				ImageElement(am.get_image("assets/image/gui/pause.png", app_state.get_width() * 0.1)),
 				on_click = lambda: app_state.queue_scene("pause_menu", self),
 				left = 20,
 				top = 20,

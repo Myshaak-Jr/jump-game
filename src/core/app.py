@@ -1,10 +1,11 @@
 from __future__ import annotations
 import pygame
 from .scene import IScene
-from .app_state_module import app_state, NewSceneData
+from . import app_state
 import util.language_manager as lm
 import util.logger as log
 from typing import Any, overload
+from .structs import NewSceneData
 
 
 __all__ = ["App"]
@@ -26,7 +27,7 @@ class App:
 		lm.init()
 		lm.set_language("en")
 
-		self._screen = pygame.display.set_mode((app_state.width, app_state.height))
+		self._screen = pygame.display.set_mode((app_state.get_width(), app_state.get_height()))
 		self._clock = pygame.time.Clock()
 
 		self._scene: IScene | None = None

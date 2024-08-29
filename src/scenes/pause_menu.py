@@ -12,11 +12,11 @@ class PauseMenuScene(IScene):
 		self.last_level = last_level
 
 		# create the GUI
-		self.gui = Container(width=app_state.width, height=app_state.height, style=Style()).with_children(
-			FlexContainer(app_state.width, direction=Direction.COLUMN, gap = 25, top = app_state.height // 4).with_children(
+		self.gui = Container(width=app_state.get_width(), height=app_state.get_height(), style=Style()).with_children(
+			FlexContainer(app_state.get_width(), direction=Direction.COLUMN, gap = 25, top = app_state.get_height() // 4).with_children(
 				LabelElement(lm.get("gui.label.pause"), style=HEADER_STYLE),
-				OffsetModifier(HSeparatorElement(app_state.width // 2, color=COLOR_WHITE), 0, -15),
-				FlexContainer(app_state.height // 20, gap = 25).with_children(
+				OffsetModifier(HSeparatorElement(app_state.get_width() // 2, color=COLOR_WHITE), 0, -15),
+				FlexContainer(app_state.get_height() // 20, gap = 25).with_children(
 					ButtonModifier(
 						LabelElement(lm.get("gui.button.continue")),
 						on_click=lambda: app_state.queue_scene(self.last_level),
@@ -37,7 +37,7 @@ class PauseMenuScene(IScene):
 
 		pygame.display.set_caption(lm.get("general.title"))
 
-		self.darken = pygame.Surface((app_state.width, app_state.height))
+		self.darken = pygame.Surface((app_state.get_width(), app_state.get_height()))
 		self.darken.fill((0, 0, 0))
 		self.darken.set_alpha(128)
 
