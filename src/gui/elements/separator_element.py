@@ -1,8 +1,14 @@
 import pygame
-from ..base import IElement
+from ..base import GUIElement
 
 
-class HSeparatorElement(IElement):
+#TODO: Make the separators use styles for color and width
+
+
+__all__ = ['HSeparatorElement', 'VSeparatorElement']
+
+
+class HSeparatorElement(GUIElement):
 	def __init__(self, width: float, color: tuple[int, int, int], *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None):
 		super().__init__(
 			left=left,
@@ -13,7 +19,7 @@ class HSeparatorElement(IElement):
 		self._width = width
 		self._color = color
 	
-	def render(self, screen):
+	def render(self, screen: pygame.Surface):
 		super().render(screen)
 		x, y = self.get_position()
 		width, height = self.get_size()
@@ -24,8 +30,8 @@ class HSeparatorElement(IElement):
 
 		return self._width + super_size[0], 3 + super_size[1]
 
-class VSeparatorElement(IElement):
-	def __init__(self, height: int | float, color: tuple[int, int, int], *, left: [float] = None, right: [float] = None, top: [float] = None, bottom: [float] = None):
+class VSeparatorElement(GUIElement):
+	def __init__(self, height: int | float, color: tuple[int, int, int], *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None):
 		super().__init__(
 			left=left,
 			right=right,
@@ -35,7 +41,7 @@ class VSeparatorElement(IElement):
 		self._height = height
 		self._color = color
 	
-	def render(self, screen):
+	def render(self, screen: pygame.Surface):
 		super().render(screen)
 		x, y = self.get_position()
 		width, height = self.get_size()

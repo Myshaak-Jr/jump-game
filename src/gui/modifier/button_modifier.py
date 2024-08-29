@@ -1,8 +1,11 @@
 from __future__ import annotations
 from collections.abc import Callable
 import pygame
-from ..base import ISingleModifier, IElement
+from ..base import ISingleModifier, GUIElement
 from ..style import Style
+
+
+__all__ = ['ButtonModifier']
 
 
 DEFAULT_STYLE_HOVERED = Style(
@@ -16,7 +19,7 @@ DEFAULT_STYLE_PRESSED = Style(
 )
 
 class ButtonModifier(ISingleModifier):
-	def __init__(self, target: IElement, *, on_click: Callable[[], None] | None = None, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style(), style_hovered: Style = DEFAULT_STYLE_HOVERED, style_pressed: Style = DEFAULT_STYLE_PRESSED):
+	def __init__(self, target: GUIElement, *, on_click: Callable[[], None] | None = None, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style(), style_hovered: Style = DEFAULT_STYLE_HOVERED, style_pressed: Style = DEFAULT_STYLE_PRESSED):
 		super().__init__(target)
 		self._on_click = on_click
 		self._hovered = False
@@ -32,7 +35,7 @@ class ButtonModifier(ISingleModifier):
 		self._style_pressed = style_pressed
 		
 	def update(self, dt: float) -> None:
-		if IElement.pressed_element is not None and IElement.pressed_element != self: return
+		if GUIElement.pressed_element is not None and GUIElement.pressed_element != self: return
 
 		mouse_pos = pygame.mouse.get_pos()
 		mouse_pressed = pygame.mouse.get_pressed()
@@ -47,10 +50,10 @@ class ButtonModifier(ISingleModifier):
 		
 		if self._hovered and mouse_pressed[0]:
 			self._pressed = True
-			IElement.pressed_element = self
+			GUIElement.pressed_element = self
 		elif self._pressed and not mouse_pressed[0]:
 			self._pressed = False
-			IElement.pressed_element = None
+			GUIElement.pressed_element = None
 			if self._hovered and self._on_click:
 				self._on_click()
 

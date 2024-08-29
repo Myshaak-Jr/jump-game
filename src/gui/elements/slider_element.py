@@ -1,8 +1,11 @@
+from collections.abc import Callable
 import pygame
-from ..base import IElement
-from typing import Callable
-from util.draw import draw_rect_opacity, draw_circle_opacity
-from ..style import Style
+from ..base import GUIElement
+from util.draw import draw_rect_opacity
+from ..style import FullStyle, Style
+
+
+__all__ = ['SliderElement']
 
 
 DEFAULT_STYLE_HOVERED = Style(
@@ -13,14 +16,14 @@ DEFAULT_STYLE_HELD = Style(
 	slider_handle_color=(255, 255, 255),
 )
 
-class SliderElement(IElement):
+class SliderElement(GUIElement):
 	def __init__(self, *,
 			  width: float,
 			  min_value: float,
 			  max_value: float,
 			  default: float = 0,
 			  step: float = 1,
-			  on_changed: Callable[[float], None],
+			  on_changed: Callable[[float], None] | None = None,
 			  left: float | None = None,
 			  right: float | None = None,
 			  top: float | None = None,
@@ -49,7 +52,7 @@ class SliderElement(IElement):
 	
 		self._dir = 1
 
-		if self._on_changed:
+		if self._on_changed is not None:
 			self._on_changed(self._value)
 
 	def on_changed(self, func: Callable[[float], None]) -> None:
@@ -61,7 +64,7 @@ class SliderElement(IElement):
 	def get_value(self):
 		return self._value
 
-	def _get_handle_x(self) -> int:
+	def _get_handle_x(self) -> float:
 		style = self.get_style()
 		width, _ = self.get_size()
 
@@ -69,8 +72,8 @@ class SliderElement(IElement):
 
 		return handle_x
 
-	def update(self, dt):
-		if IElement.pressed_element is not None and IElement.pressed_element != self: return
+	def update(self, dt: float):
+		if GUIElement.pressed_element is not None and GUIElement.pressed_element != self: return
 
 		mouse_x, mouse_y = pygame.mouse.get_pos()
 		pressed = pygame.mouse.get_pressed()[0]
@@ -87,17 +90,18 @@ class SliderElement(IElement):
 
 		if not self._held and pressed and self._hovered:
 			self._held = True
-			IElement.pressed_element = self
+			GUIElement.pressed_element = self
 		elif self._held and not pressed:
 			self._held = False
-			IElement.pressed_element = None
+			GUIElement.pressed_element = None
 		elif self._held:
 			dx = mouse_x - x - handle_x
 			self._value += dx / (self._width - style.slider_handle_radius * 2) * (self._max - self._min)
 			self._value = min(self._max, max(self._min, self._value))
-			self._on_changed(self._value)
+			if self._on_changed is not None:
+				self._on_changed(self._value)
 
-	def render(self, screen):
+	def render(self, screen: pygame.Surface):
 		super().render(screen)
 		x, y = self.get_position()
 		width, height = self.get_size()
@@ -108,12 +112,19 @@ class SliderElement(IElement):
 		width -= style.padding_x * 2
 		height -= style.padding_y * 2
 
+		slider_rect = pygame.Rect(
+			x + style.slider_handle_radius,
+			y + height / 2 - style.slider_track_width / 2,
+			width - style.slider_handle_radius * 2,
+			style.slider_track_width
+		)
+
 		# Draw the slider track
 		draw_rect_opacity(
 			screen,
 			style.slider_track_color,
 			style.slider_track_opacity,
-			(x + style.slider_handle_radius, y + height // 2 - style.slider_track_width // 2, width - style.slider_handle_radius * 2, style.slider_track_width)
+			slider_rect
 		)
 
 		# Draw the slider handle
@@ -145,7 +156,7 @@ class SliderElement(IElement):
 
 		return width, height
 	
-	def get_style(self) -> Style:
+	def get_style(self) -> FullStyle:
 		style = super().get_style()
 
 		if self._held:

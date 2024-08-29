@@ -3,6 +3,9 @@ import pygame
 from abc import ABC, abstractmethod
 
 
+__all__ = ["IScene"]
+
+
 class IScene(ABC):
 	"""Base class for scenes."""
 	@abstractmethod

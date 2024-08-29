@@ -1,10 +1,10 @@
 import pygame
-from ..base import IElement
-from ..style import Style
+from ..base import GUIElement
+from ..style import AnyStyle
 
 	
-class ImageElement(IElement):
-	def __init__(self, image: pygame.Surface, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()):
+class ImageElement(GUIElement):
+	def __init__(self, image: pygame.Surface, *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: AnyStyle | None = None):
 		super().__init__(
 			left=left,
 			right=right,
@@ -21,7 +21,7 @@ class ImageElement(IElement):
 		if darken in self._darkened_cache:
 			return self._darkened_cache[darken]
 		
-		brighness = darken * 255
+		brighness = int(darken * 255)
 
 		image = self._image.copy()
 		dark = pygame.Surface((image.get_width(), image.get_height()), flags=pygame.SRCALPHA)
@@ -30,7 +30,7 @@ class ImageElement(IElement):
 		self._darkened_cache[darken] = image
 		return image
 
-	def get_position(self) -> tuple[int, int]:
+	def get_position(self) -> tuple[float, float]:
 		x, y = super().get_position()
 		style = self.get_style()
 
@@ -44,7 +44,7 @@ class ImageElement(IElement):
 
 		return x, y
 	
-	def get_raw_size(self) -> tuple[int, int]:
+	def get_raw_size(self) -> tuple[float, float]:
 		width, height = self._image.get_size()
 		super_size = super().get_size()
 		return width + super_size[0], height + super_size[1]
@@ -65,7 +65,7 @@ class ImageElement(IElement):
 
 		screen.blit(image, self.get_position())
 	
-	def get_size(self) -> tuple[int, int]:
+	def get_size(self) -> tuple[float, float]:
 		width, height = self._image.get_size()
 		width *= self.get_style().image_scale
 		height *= self.get_style().image_scale

@@ -15,6 +15,7 @@ __all__ = [
 	"NewSceneData"
 ]
 
+
 @dataclass
 class LevelData:
 	id: int

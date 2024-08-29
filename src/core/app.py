@@ -7,6 +7,9 @@ import util.logger as log
 from typing import Any, overload
 
 
+__all__ = ["App"]
+
+
 class App:
 	"""
 	Represents an application.
@@ -37,7 +40,7 @@ class App:
 	@overload
 	def set_scene(self, scene: NewSceneData) -> None: ...
 
-	def set_scene(self, scene: [NewSceneData | IScene | str], *args: Any, **kwargs: Any) -> None:
+	def set_scene(self, scene: NewSceneData | IScene | str | None, *args: Any, **kwargs: Any) -> None:
 		"""
 		Sets the current scene of the app.
 
@@ -76,7 +79,7 @@ class App:
 	@overload
 	def run(self, scene: NewSceneData) -> None: ...
 
-	def run(self, scene: [str | IScene | NewSceneData], *args: Any, **kwargs: Any) -> None:
+	def run(self, scene: str | IScene | NewSceneData | None, *args: Any, **kwargs: Any) -> None:
 		"""
 		Runs the app.
 		Raises:
@@ -109,15 +112,20 @@ class App:
 				app_state.queue_stop()
 				return
 
-			self._scene.handle_event(event)
+			if self._scene:
+				self._scene.handle_event(event)
 			
 	def _update(self, dt: float) -> None:
-		self._scene.update(dt)
-
-		if app_state.get_next_scene() is not None:
-			self.set_scene(app_state.get_next_scene())
-			app_state.clear_next_scene()
+		if self._scene:
 			self._scene.update(dt)
 
+		next_scene = app_state.get_next_scene()
+		if next_scene is not None:
+			self.set_scene(next_scene)
+			app_state.clear_next_scene()
+			if self._scene:
+				self._scene.update(dt)
+
 	def _render(self) -> None:
-		self._scene.render(self._screen)
+		if self._scene:
+			self._scene.render(self._screen)

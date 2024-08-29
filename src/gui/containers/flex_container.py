@@ -1,7 +1,6 @@
-from turtle import width
 import pygame
-from ..base import IContainer, IElement
-from ..style import Style
+from ..base import IContainer, GUIElement
+from ..style import AnyStyle
 from enum import Enum
 
 
@@ -25,8 +24,8 @@ class Direction(Enum):
 
 class FlexContainer(IContainer):
 	def __init__(self,
-			  min_width: int = 0,
-			  min_height: int = 0, *, direction: Direction = Direction.ROW, align: Alignment = Alignment.CENTER, justify: Justification = Justification.START, gap: int = 0, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()):
+			  min_width: float = 0,
+			  min_height: float = 0, *, direction: Direction = Direction.ROW, align: Alignment = Alignment.CENTER, justify: Justification = Justification.START, gap: float = 0, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: AnyStyle | None = None):
 		super().__init__(
 			left=left,
 			right=right,
@@ -59,60 +58,62 @@ class FlexContainer(IContainer):
 	def set_justification(self, justification: Justification) -> None:
 		self._justify = justification
 
-	def get_gap(self) -> int:
+	def get_gap(self) -> float:
 		return self._gap
 
-	def set_gap(self, min_gap: int) -> None:
+	def set_gap(self, min_gap: float) -> None:
 		self._gap = min_gap
 
-	def set_min_size(self, width: int, height: int) -> None:
+	def set_min_size(self, width: float, height: float) -> None:
 		self._width = width
 		self._height = height
 
-	def get_min_size(self) -> tuple[int, int]:
+	def get_min_size(self) -> tuple[float, float]:
 		return self._width, self._height
 
-	def _calc_children_width(self) -> int:
+	def _calc_children_width(self) -> float:
 		if self._direction == Direction.ROW:
 			return sum(child.get_size()[0] for child in self._children)
 		else:
 			return max(child.get_size()[0] for child in self._children)
 		
-	def _calc_children_height(self) -> int:
+	def _calc_children_height(self) -> float:
 		if self._direction == Direction.ROW:
 			return max(child.get_size()[1] for child in self._children)
 		else:
 			return sum(child.get_size()[1] for child in self._children)
 	
-	def _calc_min_content_width(self) -> int:
+	def _calc_min_content_width(self) -> float:
 		children_width = self._calc_children_width()
 		if self._direction == Direction.ROW:
 			return children_width + self._gap * (len(self._children) - 1)
 		else:
 			return children_width
 	
-	def _calc_min_content_height(self) -> int:
+	def _calc_min_content_height(self) -> float:
 		children_height = self._calc_children_height()
 		if self._direction == Direction.ROW:
 			return children_height
 		else:
 			return children_height + self._gap * (len(self._children) - 1)
 
-	def _calc_children_size(self) -> tuple[int, int]:
+	def _calc_children_size(self) -> tuple[float, float]:
 		return self._calc_children_width(), self._calc_children_height()
 
-	def _calc_min_content_size(self) -> tuple[int, int]:
+	def _calc_min_content_size(self) -> tuple[float, float]:
 		return self._calc_min_content_width(), self._calc_min_content_height()
 
-	def _calc_child_cross_pos(self, cross_size: int, child_cross_size: int) -> int:
+	def _calc_child_cross_pos(self, cross_size: float, child_cross_size: float) -> float:
 		if self._align == Alignment.CENTER:
-			return (cross_size - child_cross_size) // 2
+			return (cross_size - child_cross_size) / 2
 		elif self._align == Alignment.START:
 			return 0
 		elif self._align == Alignment.END:
 			return cross_size - child_cross_size
+		else:
+			raise ValueError("Invalid alignment")
 
-	def _set_child_position(self, child: IElement, main_pos: int, cross_pos: int) -> None:
+	def _set_child_position(self, child: GUIElement, main_pos: float, cross_pos: float) -> None:
 		if self._direction == Direction.ROW:
 			child.set_position(left=main_pos, top=cross_pos)
 		else:
@@ -218,13 +219,13 @@ class FlexContainer(IContainer):
 		for child in self._children:
 			child.render(screen)
 	
-	def _orient(self, vector: tuple[int, int]) -> tuple[int, int]:
+	def _orient(self, vector: tuple[float, float]) -> tuple[float, float]:
 		if self._direction == Direction.ROW:
 			return vector
 		else:
-			return vector[::-1]
+			return tuple[float, float](vector[::-1])
 
-	def get_size(self) -> tuple[int, int]:
+	def get_size(self) -> tuple[float, float]:
 		width, height = super().get_size()
 
 		content_width, content_height = self._calc_min_content_size()
@@ -234,5 +235,5 @@ class FlexContainer(IContainer):
 
 		return width, height
 	
-	def get_independent_size(self) -> tuple[int, int]:
+	def get_independent_size(self) -> tuple[float, float]:
 		return self._width, self._height

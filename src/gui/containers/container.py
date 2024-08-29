@@ -1,10 +1,10 @@
 import pygame
-from ..base import IElement, IContainer
-from ..style import Style
+from ..base import IContainer
+from ..style import AnyStyle
 
 
 class Container(IContainer):
-	def __init__(self, width: int | str = "auto", height: int | str = "auto", *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: Style = Style()) -> None:
+	def __init__(self, width: float | str = "auto", height: float | str = "auto", *, left: float | None = None, right: float | None = None, top: float | None = None, bottom: float | None = None, style: AnyStyle | None = None) -> None:
 		self._width = width
 		self._height = height
 		super().__init__(
@@ -24,14 +24,14 @@ class Container(IContainer):
 		for child in self.get_children():
 			child.render(screen)
 
-	def set_width(self, width: int | str) -> None:
+	def set_width(self, width: float | str) -> None:
 		self._width = width
 
-	def set_height(self, height: int | str) -> None:
+	def set_height(self, height: float | str) -> None:
 		self._height = height	
 
-	def get_size(self) -> tuple[int, int]:
-		width, height = self._width, self._height
+	def get_size(self) -> tuple[float, float]:
+		width, height = 0, 0
 
 		if self._width == "auto":
 			min_x, max_x = 0, 0
@@ -42,6 +42,8 @@ class Container(IContainer):
 				min_x = min(min_x, child_min_x)
 				max_x = max(max_x, child_max_x)
 			width = max_x - min_x
+		elif isinstance(self._width, float):
+			width = self._width
 		
 		if self._height == "auto":
 			min_y, max_y = 0, 0
@@ -52,13 +54,15 @@ class Container(IContainer):
 				min_y = min(min_y, child_min_y)
 				max_y = max(max_y, child_max_y)
 			height = max_y - min_y
+		elif isinstance(self._height, float):
+			height = self._height
 		
 		super_size = super().get_size()
 
 		return width + super_size[0], height + super_size[1]
 	
-	def get_independent_size(self) -> tuple[int, int]:
-		width, height = self._width, self._height
+	def get_independent_size(self) -> tuple[float, float]:
+		width, height = 0, 0
 
 		if self._width == "auto":
 			min_x, max_x = 0, 0
@@ -69,6 +73,8 @@ class Container(IContainer):
 				min_x = min(min_x, child_min_x)
 				max_x = max(max_x, child_max_x)
 			width = max_x - min_x
+		elif isinstance(self._width, float):
+			width = self._width
 		
 		if self._height == "auto":
 			min_y, max_y = 0, 0
@@ -79,7 +85,9 @@ class Container(IContainer):
 				min_y = min(min_y, child_min_y)
 				max_y = max(max_y, child_max_y)
 			height = max_y - min_y
-		
+		elif isinstance(self._height, float):
+			height = self._height
+
 		super_size = super().get_size()
 
 		return width + super_size[0], height + super_size[1]
