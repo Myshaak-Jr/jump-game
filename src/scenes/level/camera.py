@@ -1,72 +1,109 @@
-from .collision import IHasAABB, aabb
-from core import app_state, LevelData
+from scenes.level.util import IHasRect
+from core import app_state
 import math
 import pygame
-import util.logger as log
+from util.my_math import Vec2
 
 
-class Camera(IHasAABB):
-	def __init__(self, zoom: float = 1.0) -> None:
-		self._x = 0
-		self._y = 0
+__all__ = [
+	"Camera"
+]
+
+
+class Camera(IHasRect):
+	def __init__(self, zoom: int, easing_rate: float) -> None:
+		self._pos = Vec2(0, 0)
 		self._zoom = zoom
+		self._easing_rate = easing_rate
+		self._following: IHasRect | None = None
+		self._relative_pos = Vec2(0.5)
 
-	@property
-	def x(self) -> float:
-		return self._x
-	
-	@property
-	def y(self) -> float:
-		return self._y
-	
-	def zoom(self, delta: float) -> None:
+	def zoom(self, delta: int) -> None:
 		self._zoom += delta
-		if self._zoom < 0.1:
-			self._zoom = 0.1
-		log.info(f"Zoom: {self._zoom}")
+		if self._zoom < 1:
+			self._zoom = 1
 
-	def follow_object(self, obj: IHasAABB, level: LevelData) -> None:
-		RELATIVE_X = 0.2
-		RELATIVE_Y = 0.2
+	def get_zoom(self) -> int:
+		return self._zoom
 
-		obj_rect = obj.get_rect()
+	def follow_object(self, obj: IHasRect, relative_pos: Vec2 = Vec2(0.5)) -> None:
+		self._following = obj
+		self._relative_pos = relative_pos
+
+		self._pos = self._calc_target_pos()
+	
+	def _calc_target_pos(self) -> Vec2:
+		if self._following is None: return self._pos
+
+		obj_rect = self._following.get_rect()
 
 		view_width = app_state.get_width() / self._zoom
 		view_height = app_state.get_height() / self._zoom
-		self._x = obj_rect.x - view_width * RELATIVE_X + obj_rect.width / 2
-		self._y = obj_rect.y - view_height * RELATIVE_Y + obj_rect.height / 2
+		target_x = obj_rect.x - view_width * self._relative_pos.x + obj_rect.width / 2
+		target_y = obj_rect.y - view_height * self._relative_pos.y + obj_rect.height / 2
+
+		return Vec2(target_x, target_y)
+
+	def update(self, dt: float, level_size: Vec2) -> None:
+		if self._following is None: return
+
+		target_pos = self._calc_target_pos()
+		self._pos = target_pos - (target_pos - self._pos) * math.exp(-self._easing_rate * dt)
 
 		# Clamp the camera to the level bounds
-		if self._x < 0:
-			self._x = 0
-		if self._y < 0:
-			self._y = 0
-		if self._x + view_width > level.width:
-			self._x = level.width - view_width
-		if self._y + view_height > level.height:
-			self._y = level.height - view_height
-	
-	def apply(self, obj: IHasAABB) -> pygame.Rect:
+		new_x = min(max(self._pos.x, 0), level_size.x - app_state.get_width() / self._zoom)
+		new_y = min(max(self._pos.y, 0), level_size.y - app_state.get_height() / self._zoom)
+		self._pos = Vec2(new_x, new_y)
+
+	def set_position(self, x: float, y: float) -> None:
+		self._pos = Vec2(x, y)
+
+	def apply(self, obj: IHasRect) -> pygame.Rect:
 		obj_rect = obj.get_rect()
 
-		new_x = math.floor((obj_rect.x - self._x) * self._zoom)
-		new_y = math.floor((obj_rect.y - self._y) * self._zoom)
+		new_x = math.floor((obj_rect.x - self._pos.x) * self._zoom)
+		new_y = math.floor((obj_rect.y - self._pos.y) * self._zoom)
 		new_w = math.ceil(obj_rect.width * self._zoom)
 		new_h = math.ceil(obj_rect.height * self._zoom)
 
 		return pygame.Rect(new_x, new_y, new_w, new_h)
 	
-	def get_x(self) -> float:
-		return self._x
-	
-	def get_y(self) -> float:
-		return self._y
-	
-	def get_width(self) -> float:
-		return app_state.get_width() / self._zoom
-	
-	def get_height(self) -> float:
-		return app_state.get_height() / self._zoom
+	def apply_point(self, point: Vec2) -> Vec2:
+		new_x = math.floor((point.x - self._pos.x) * self._zoom)
+		new_y = math.floor((point.y - self._pos.y) * self._zoom)
 
-	def clip(self, entity: IHasAABB) -> bool:
-		return not aabb(self, entity)
+		return Vec2(new_x, new_y)
+
+	def apply_inverse(self, rect: pygame.Rect) -> pygame.FRect:
+		new_x = rect.x / self._zoom + self._pos.x
+		new_y = rect.y / self._zoom + self._pos.y
+		new_w = rect.width / self._zoom
+		new_h = rect.height / self._zoom
+
+		return pygame.FRect(new_x, new_y, new_w, new_h)
+	
+	def apply_inverse_point(self, point: Vec2) -> Vec2:
+		new_x = point.x / self._zoom + self._pos.x
+		new_y = point.y / self._zoom + self._pos.y
+
+		return Vec2(new_x, new_y)
+
+	def clip(self, entity: IHasRect) -> bool:
+		rect = entity.get_rect()
+		view_rect = self.get_rect()
+
+		if rect.x + rect.width < view_rect.x:
+			return True
+		if rect.x > view_rect.x + view_rect.width:
+			return True
+		if rect.y + rect.height < view_rect.y:
+			return True
+		if rect.y > view_rect.y + view_rect.height:
+			return True
+
+		return False
+		
+	
+	def get_rect(self) -> pygame.FRect:
+		return pygame.FRect(self._pos.x, self._pos.y, app_state.get_width() / self._zoom, app_state.get_height() / self._zoom)
+	

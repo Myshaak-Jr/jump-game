@@ -17,7 +17,7 @@ LABEL_STYLE = Style(
 	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 35),
 )
 
-FOOTER_STYLE = Style(
+SMALL_LABEL_STYLE = Style(
 	text_color=COLOR_WHITE,
 	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 20),
 )

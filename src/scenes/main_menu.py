@@ -6,7 +6,7 @@ from gui.containers.flex_container import Direction, FlexContainer
 import util.asset_manager as am
 import util.language_manager as lm
 import util.logger as log
-from styles import FOOTER_STYLE, COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, HEADER_STYLE
+from styles import SMALL_LABEL_STYLE, COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, HEADER_STYLE
 import json
 
 
@@ -34,7 +34,7 @@ class MainMenuScene(IScene):
 			),
 			LabelElement(
 				"© Matěj Smetana",
-				style=FOOTER_STYLE,
+				style=SMALL_LABEL_STYLE,
 				right = 20,
 				bottom = 20
 			),

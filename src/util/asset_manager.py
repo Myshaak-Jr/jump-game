@@ -4,7 +4,7 @@ import pygame
 _images: dict[str, pygame.Surface] = {}
 _fonts: dict[tuple[str | None, int], pygame.font.Font] = {}
 
-def get_image(path: str, size: float | tuple[float, float] | pygame.Vector2 | None) -> pygame.Surface:
+def get_image(path: str, size: float | tuple[float, float] | pygame.Vector2 | None = None) -> pygame.Surface:
 	if path not in _images:
 		_images[path] = pygame.image.load(path).convert_alpha()
 	image = _images[path]

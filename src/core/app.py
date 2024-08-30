@@ -31,7 +31,12 @@ class App:
 		self._clock = pygame.time.Clock()
 
 		self._scene: IScene | None = None
+
+		app_state.register_resolution_changed_callback(self._on_resolution_changed)
 	
+	def _on_resolution_changed(self, width: int, height: int) -> None:
+		self._screen = pygame.display.set_mode((width, height))
+
 	@overload
 	def set_scene(self, scene: IScene) -> None: ...
 

@@ -1,28 +1,79 @@
+from typing import override
 import pygame
+import pymunk
 from .camera import Camera
-from .collision import IHasAABB
+from .util import IHasRect
+import util.asset_manager as am
 
 
-class Tile(IHasAABB):
-	def __init__(self, x: float, y: float, width: float = 1, height: float = 1) -> None:
-		self.x = x
-		self.y = y
-		self.width = width
-		self.height = height
+__all__ = [
+	"TileSprite",
+	"TileCollider",
+]
 
-	def get_x(self) -> float:
-		return self.x
 
-	def get_y(self) -> float:
-		return self.y
+class TileSprite(IHasRect):
+	def __init__(self, x: float, y: float, width: float, height: float, sprite: str, src_rect: pygame.Rect | None = None):
+		self._color = (255, 255, 255)
+		
+		# Pygame representation
+		self._rect = pygame.FRect(x, y, width, height)
+
+		self._sprite = am.get_image(sprite)
+		self._src_rect = src_rect
+
+		# Cache for zoomed sprites
+		self._last_zoom = 0
+		self._zoom_cache: pygame.Surface | None = None
 	
-	def get_width(self) -> float:
-		return self.width
-	
-	def get_height(self) -> float:
-		return self.height
+	@override
+	def get_rect(self) -> pygame.FRect:
+		return self._rect
 
-	def render(self, screen: pygame.Surface, camera: Camera) -> None:
+	def render(self, screen: pygame.Surface, camera: Camera):
 		if camera.clip(self): return
 		rect = camera.apply(self)
-		pygame.draw.rect(screen, (255, 255, 255), rect)
+
+		zoom = camera.get_zoom()
+
+		if zoom != self._last_zoom or self._zoom_cache is None:
+			new_width = int(self._rect.width * zoom)
+			new_height = int(self._rect.height * zoom)
+			self._zoom_cache = pygame.transform.scale(self._sprite, (new_width, new_height))
+			self._last_zoom = zoom
+
+		screen.blit(self._zoom_cache, rect, self._src_rect)
+
+
+class TileCollider(IHasRect):
+	def __init__(self, space: pymunk.Space, x: float, y: float, width: float, height: float):
+		self._color = (255, 255, 255)
+		
+		# Pygame representation
+		self._rect = pygame.FRect(x, y, width, height)
+		
+		# Pymunk representation
+		self._body = pymunk.Body(body_type=pymunk.Body.STATIC)
+		
+		self._body.position = (x + width / 2, y + height / 2)
+		self._shape = pymunk.Poly.create_box(self._body, (width, height))
+		self._shape.density = 1
+		self._shape.elasticity = 0.5
+		self._shape.friction = 0.5  # You can adjust friction or other properties here
+		
+		# Add the shape to the space
+		space.add(self._body, self._shape)
+	
+	def render(self, screen: pygame.Surface, camera: Camera):
+		if camera.clip(self): return
+		rect = camera.apply(self)
+		pygame.draw.rect(screen, (255, 0, 0), rect, 3)
+	
+	@override
+	def get_rect(self) -> pygame.FRect:
+		return self._rect
+
+	def update(self):
+		# Update the position based on Pymunk simulation
+		self._rect.x = self._body.position.x - self._rect.width / 2
+		self._rect.y = self._body.position.y - self._rect.height / 2

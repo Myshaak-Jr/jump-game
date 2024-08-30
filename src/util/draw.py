@@ -15,4 +15,3 @@ def draw_circle_opacity(surface: pygame.Surface, color: tuple[int, int, int], op
 	color_alpha = color[:3] + (int(opacity * 255),)
 	pygame.draw.circle(alpha_surface, color_alpha, (radius, radius), radius, width)
 	surface.blit(alpha_surface, (x - radius, y - radius))
-

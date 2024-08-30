@@ -60,9 +60,9 @@ ALIGNMENTS = list(Alignment)
 JUSTIFICATIONS = list(Justification)
 
 
-class TestZoneScene(IScene):
+class GuiTestScene(IScene):
 	def __init__(self) -> None:
-		global flex_width, flex_height, min_dummy_width, max_dummy_width, max_dummy_width, max_dummy_height
+		global flex_width, flex_height, min_dummy_width, max_dummy_width, max_dummy_width, max_dummy_height, min_dummy_height
 		flex_width = app_state.get_width() * 9 / 10
 		flex_height = app_state.get_height() * 9 / 10
 
@@ -70,7 +70,7 @@ class TestZoneScene(IScene):
 		max_dummy_height = flex_height / 9
 
 		min_dummy_width = max_dummy_width / 2
-		max_dummy_width = max_dummy_height / 2
+		min_dummy_height = max_dummy_height / 2
 
 		self.current_direction = 0
 		self.current_alignment = 0
@@ -157,7 +157,7 @@ class TestZoneScene(IScene):
 
 	@classmethod
 	def get_name(cls) -> str:
-		return "test_zone"
+		return "gui_test_zone"
 	
 	@override
 	def on_enter(self) -> None:

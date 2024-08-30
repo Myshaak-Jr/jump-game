@@ -1,123 +1,117 @@
-from typing import overload
+from typing import override
 import pygame
+import pymunk
+import pymunk.space
+from .util import IHasRect
+from util.my_math import Vec2
 from .camera import Camera
-from .collision import IHasAABB
 from core import PlanetData, PlayerData
-from pygame.math import Vector2
 import math
+from .util import GLOBAL_SCALE
 
 
-class Player(IHasAABB):
-	def __init__(self, player_data: PlayerData, planet_data: PlanetData) -> None:
+__all__ = [
+	"Player",
+]
+
+
+class Player(IHasRect):
+	def __init__(self, space: pymunk.Space, x: float, y: float, width: float, planet: PlanetData, player_data: PlayerData):
+		self._planet = planet
 		self._player_data = player_data
-		self._planet_data = planet_data
+		self._color = (0, 255, 0)
 
-		self._pos = Vector2(0)
-		self._vel = Vector2(0)
-		self._impulse = Vector2(0)
+		# Pygame representation
+		self._rect = pygame.FRect(x, y, width, width)
+		
+		# Pymunk representation
+		self._body = pymunk.Body(1, 1)  # Mass and moment of inertia
+		self._body.position = (x + width / 2, y + width / 2)
+		self._shape = pymunk.Circle(self._body, width / 2)
+		self._shape.density = 1
+		self._shape.elasticity = 0.5
+		self._shape.friction = 0.5
+		
+		# Collision type to identify player
+		self._shape.collision_type = 1
+		
+		# Add the shape to the space
+		space.add(self._body, self._shape)
 
-		self._size = Vector2(0.3, 0.3)
-
-		self.on_ground: bool = False
-
-	@overload
-	def set_position(self, x: float, y: float) -> None: ...
-
-	@overload
-	def set_position(self, x: Vector2) -> None: ...
-
-	def set_position(self, x: float | Vector2, y: float | None = None) -> None:
-		if isinstance(x, Vector2):
-			self._pos = x
-		else:
-			self._pos = Vector2(x)
+		# Apply a force to the right
+		self._push_right()
 	
-	@overload
-	def set_velocity(self, x: float, y: float) -> None: ...
-
-	@overload
-	def set_velocity(self, x: Vector2) -> None: ...
-
-	def set_velocity(self, x: float | Vector2, y: float | None = None) -> None:
-		if isinstance(x, Vector2):
-			self._vel = x
-		else:
-			self._vel = Vector2(x)
-
-	@overload
-	def apply_impulse(self, x: float, y: float) -> None: ...
-
-	@overload
-	def apply_impulse(self, x: Vector2) -> None: ...
-
-	def apply_impulse(self, x: Vector2 | float, y: float | None = None) -> None:
-		if isinstance(x, Vector2):
-			self._impulse += x
-		else:
-			self._impulse += Vector2(x)
-	
-	def _apply_gravity(self) -> None:
-		self.apply_impulse(Vector2(0, self._planet_data.gravity))
-	
-	def _apply_drag(self) -> None:
-		self.apply_impulse(0, -self._vel.x * self._planet_data.drag)
-
-	def _integrate(self, dt: float) -> None:
-		self._vel += self._impulse * dt
-		self._pos += self._vel * dt
-
-		self._impulse = Vector2(0)
-
-	@staticmethod
-	def _calc_thrust_power(x: float, decay: float) -> float:
-		# https://www.geogebra.org/calculator/vtr4t243
-		if x > 0.0:
-			return math.exp(-x * decay)
-		else:
-			a = x * decay
-			return math.log(a**2 - a + 1) + 1
-
-	def _calc_up_impulse(self) -> Vector2:
-		y = -self._player_data.thrust * self._calc_thrust_power(-self._vel.y, self._player_data.thrust_decay)
-		return Vector2(0, y)
-	
-	def _calc_down_impulse(self) -> Vector2:
-		y = self._player_data.thrust * self._calc_thrust_power(self._vel.y, self._player_data.thrust_decay)
-		return Vector2(0, y)
-
-	def _handle_input(self) -> None:
-		key_state = pygame.key.get_pressed()
-		if key_state[pygame.K_UP] or key_state[pygame.K_SPACE]:
-			self.apply_impulse(self._calc_up_impulse())
-		if key_state[pygame.K_DOWN] or key_state[pygame.K_LSHIFT]:
-			self.apply_impulse(self._calc_down_impulse())
-
-	def stop_y_movement(self, new_y: float) -> None:
-		self._vel.y = 0
-		self._pos.y = new_y
-
-	def update(self, dt: float) -> None:
-		self._handle_input()
-		self._apply_gravity()
-		self._apply_drag()
-		self._integrate(dt)
-	
-	def get_x(self) -> float:
-		return self._pos.x
-
-	def get_y(self) -> float:
-		return self._pos.y
-	
-	def get_width(self) -> float:
-		return self._size.x
-	
-	def get_height(self) -> float:
-		return self._size.y
-
-	def render(self, screen: pygame.Surface, camera: Camera) -> None:
+	def render(self, screen: pygame.Surface, camera: Camera):
 		if camera.clip(self): return
 		rect = camera.apply(self)
-		if self.on_ground:
-			pygame.draw.rect(screen, (0, 255, 0), rect)
+
+		pygame.draw.circle(screen, self._color, (int(rect.x + rect.width / 2), int(rect.y + rect.width / 2)), int(rect.width / 2), 1)
+
+		pygame.draw.circle(screen, self._color, (int(rect.x + rect.width / 2), int(rect.y + rect.width / 2)), 2)
+
+		angle = self._body.angle
+		pygame.draw.line(screen, self._color, (rect.x + rect.width / 2, rect.y + rect.width / 2), (rect.x + rect.width / 2 + math.cos(angle) * rect.width / 2, rect.y + rect.width / 2 + math.sin(angle) * rect.width / 2), 1)
+		
+	
+	def set_pos(self, pos: Vec2):
+		self._body.position = pos.x + self._rect.width / 2, pos.y + self._rect.width / 2
+		self.update_rect()
+
+	@override
+	def get_rect(self) -> pygame.FRect:
+		return self._rect
+
+	def update_rect(self):
+		# Update the position based on Pymunk simulation
+		self._rect.x = self._body.position.x - self._rect.width / 2
+		self._rect.y = self._body.position.y - self._rect.width / 2
+
+	def update(self):
+		if self._body.velocity.x < self._planet.game_speed * GLOBAL_SCALE:
+			self._push_right()
+
+		key_state = pygame.key.get_pressed()
+		if key_state[pygame.K_SPACE]:
+			force = Vec2(0, -self._calc_thrust_power(1))
+			force = force.rotate(-self._body.angle)
+			self._body.apply_force_at_local_point(force.to_tuple())
+		if key_state[pygame.K_LSHIFT]:
+			self._body.apply_force_at_local_point((0, self._calc_thrust_power(-1)))
+
+	def _push_right(self):
+		force = Vec2(10, 0)
+		force = force.rotate(-self._body.angle)
+		self._body.apply_impulse_at_local_point(force.to_tuple())
+
+		#self._body.velocity = self._planet.game_speed * GLOBAL_SCALE, self._body.velocity.y
+	
+	def is_alive(self, level_size: Vec2) -> bool:
+		if self._body.velocity.x <= 0.0:
+			return False
+		if self._rect.y > level_size.y:
+			return False
+		return True
+			
+	def get_width(self) -> float:
+		return self._rect.width
+	
+	def get_height(self) -> float:
+		return self._rect.width
+	
+	def get_x(self) -> float:
+		return self._rect.x
+	
+	def get_y(self) -> float:
+		return self._rect.y
+	
+	def _calc_thrust_power(self, direction: int) -> float:
+		# https://www.geogebra.org/calculator/vtr4t243
+		x = self._body.velocity.y / GLOBAL_SCALE
+		decay = self._player_data.thrust_decay
+		thrust = self._player_data.thrust
+		if x < 0.0:
+			return thrust * math.exp(x * direction * decay)
 		else:
-			pygame.draw.ellipse(screen, (255, 0, 0), rect)
+			return thrust
+			a = -x * decay * direction
+			return thrust * math.log(a**2 - a + 1) + 1

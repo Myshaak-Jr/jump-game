@@ -1,18 +1,20 @@
 import sys
 from core import App, app_state
 from scenes import *
-
 import util.logger as log
  
 
 def main() -> int:
+	log.enable()
+#	app_state.enable_fps()
+#	app_state.enable_bounds()
 	app_state.set_window_size(1920 // 2, 1080 // 2)
 	app_state.register_scene(MainMenuScene)
-	app_state.register_scene(LevelScene)
 	app_state.register_scene(GameOverScene)
 	app_state.register_scene(PauseMenuScene)
 	app_state.register_scene(WinMenuScene)
 	app_state.register_scene(AudioSettingsScene)
+	app_state.register_scene(LevelScene)
 
 	app = None
 	app = App()
