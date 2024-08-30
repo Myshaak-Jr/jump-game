@@ -4,6 +4,7 @@ from core import IScene
 from core import app_state
 from gui import LabelElement, ButtonModifier, Container, Style, HSeparatorElement, OffsetModifier
 from gui.containers.flex_container import Direction, FlexContainer
+from util import my_math
 import util.language_manager as lm
 from styles import COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, HEADER_STYLE
 from .level import LevelScene
@@ -11,7 +12,8 @@ from .level import LevelScene
 
 class GameOverScene(IScene):
 	def __init__(self, last_level: LevelScene) -> None:
-		self.last_level = last_level
+		self._last_level = last_level
+		self._slowmo_factor = 1
 
 		# create the GUI
 		self._gui = Container(width=app_state.get_width(), height=app_state.get_height(), style=Style()).with_children(
@@ -21,7 +23,7 @@ class GameOverScene(IScene):
 				FlexContainer(app_state.get_height() / 20, gap = 25).with_children(
 					ButtonModifier(
 						LabelElement(lm.get("gui.button.retry")),
-						on_click=lambda: app_state.queue_scene("level", self.last_level.get_planet()),
+						on_click=lambda: app_state.queue_scene("level", self._last_level.get_planet()),
 						style=BUTTON_STYLE,
 						style_hovered=BUTTON_STYLE_HOVERED,
 						style_pressed=BUTTON_STYLE_PRESSED
@@ -39,22 +41,25 @@ class GameOverScene(IScene):
 
 		pygame.display.set_caption(lm.get("general.title"))
 
-		self.darken = pygame.Surface((app_state.get_width(), app_state.get_height()))
-		self.darken.fill((0, 0, 0))
-		self.darken.set_alpha(128)
+		self._darkening_surface = pygame.Surface((app_state.get_width(), app_state.get_height()))
+		self._darkening_surface.fill((0, 0, 0))
 
 	def handle_event(self, event: pygame.event.Event) -> None:
 		pass
  
 	def update(self, dt: float) -> None:
+		self._slowmo_factor = my_math.ease(self._slowmo_factor, 0.0, 0.3, dt)
+		self._darkening_surface.set_alpha(int(255 * (1 - self._slowmo_factor * 0.5)))
+
+		self._last_level.update_game_content(dt * self._slowmo_factor * 0.2)
 		self._gui.update(dt)
 
 	def render(self, screen: pygame.Surface) -> None:
 		screen.fill((0, 0, 0))
 
-		self.last_level.render_game_content(screen)
+		self._last_level.render_game_content(screen)
 
-		screen.blit(self.darken, (0, 0))
+		screen.blit(self._darkening_surface, (0, 0))
 
 		self._gui.render(screen)
 

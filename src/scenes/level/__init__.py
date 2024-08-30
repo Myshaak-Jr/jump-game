@@ -89,10 +89,10 @@ class LevelScene(IScene):
 		return self._planet
 	
 	def update_game_content(self, dt: float) -> None:
-		self._player.update()
+		self._player.physics_update()
 
 		self._space.step(dt)
-		self._player.update_rect()
+		self._player.update(self._level_size)
 
 		for tile in self._tile_colliders:
 			tile.update()
@@ -121,7 +121,7 @@ class LevelScene(IScene):
 
 		self.update_game_content(dt)
 
-		if not self._player.is_alive(self._level_size):
+		if not self._player.is_alive():
 			app_state.queue_scene("game_over", self)
 
 		self._check_win()

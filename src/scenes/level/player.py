@@ -20,6 +20,7 @@ class Player(IHasRect):
 		self._planet = planet
 		self._player_data = player_data
 		self._color = (0, 255, 0)
+		self._alive = True
 
 		# Pygame representation
 		self._rect = pygame.FRect(x, y, width, width)
@@ -31,7 +32,7 @@ class Player(IHasRect):
 		self._shape.density = 1
 		self._shape.elasticity = 0.5
 		self._shape.friction = 0.5
-		
+
 		# Collision type to identify player
 		self._shape.collision_type = 1
 		
@@ -54,19 +55,27 @@ class Player(IHasRect):
 		
 	
 	def set_pos(self, pos: Vec2):
-		self._body.position = pos.x + self._rect.width / 2, pos.y + self._rect.width / 2
-		self.update_rect()
+		self._body.position = (pos.x + self._rect.width / 2, pos.y + self._rect.width / 2)
+
+		self._rect.x = self._body.position.x - self._rect.width / 2 # type: ignore
+		self._rect.y = self._body.position.y - self._rect.width / 2 # type: ignore
 
 	@override
 	def get_rect(self) -> pygame.FRect:
 		return self._rect
 
-	def update_rect(self):
+	def update(self, level_size: Vec2):
 		# Update the position based on Pymunk simulation
 		self._rect.x = self._body.position.x - self._rect.width / 2
 		self._rect.y = self._body.position.y - self._rect.width / 2
 
-	def update(self):
+		if self._body.velocity.x <= 0.0:
+			self._alive = False
+		if self._rect.y > level_size.y:
+			self._alive = False
+	
+	def physics_update(self):
+		if not self._alive: return
 		if self._body.velocity.x < self._planet.game_speed * GLOBAL_SCALE:
 			self._push_right()
 
@@ -85,12 +94,8 @@ class Player(IHasRect):
 
 		#self._body.velocity = self._planet.game_speed * GLOBAL_SCALE, self._body.velocity.y
 	
-	def is_alive(self, level_size: Vec2) -> bool:
-		if self._body.velocity.x <= 0.0:
-			return False
-		if self._rect.y > level_size.y:
-			return False
-		return True
+	def is_alive(self) -> bool:
+		return self._alive
 			
 	def get_width(self) -> float:
 		return self._rect.width

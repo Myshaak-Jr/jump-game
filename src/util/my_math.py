@@ -223,3 +223,20 @@ def get_side_from_vector(vec: Vec2) -> Side:
             return Side.BOTTOM
         else:
             return Side.TOP
+
+@overload
+def ease(value: float, target: float, easing_rate: float, dt: float) -> float: ...
+
+@overload
+def ease(value: Vec2, target: Vec2, easing_rate: float, dt: float) -> Vec2: ...
+
+def ease(value: float | Vec2, target: float | Vec2, easing_rate: float, dt: float) -> float | Vec2:
+	if isinstance(value, Vec2) and isinstance(target, Vec2):
+		return Vec2(
+			ease(value.x, target.x, easing_rate, dt),
+			ease(value.y, target.y, easing_rate, dt)
+		)
+	elif isinstance(value, (int, float)) and isinstance(target, (int, float)):
+		return target - (target - value) * math.exp(-easing_rate * dt)
+	else:
+		raise ValueError("Invalid argument types")

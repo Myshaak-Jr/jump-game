@@ -2,6 +2,7 @@ from scenes.level.util import IHasRect
 from core import app_state
 import math
 import pygame
+from util import my_math
 from util.my_math import Vec2
 
 
@@ -48,7 +49,7 @@ class Camera(IHasRect):
 		if self._following is None: return
 
 		target_pos = self._calc_target_pos()
-		self._pos = target_pos - (target_pos - self._pos) * math.exp(-self._easing_rate * dt)
+		self._pos = my_math.ease(self._pos, target_pos, self._easing_rate, dt)
 
 		# Clamp the camera to the level bounds
 		new_x = min(max(self._pos.x, 0), level_size.x - app_state.get_width() / self._zoom)
