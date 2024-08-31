@@ -54,7 +54,14 @@ class MainMenuScene(IScene):
 					style=BUTTON_STYLE,
 					style_hovered=BUTTON_STYLE_HOVERED,
 					style_pressed=BUTTON_STYLE_PRESSED
-				)
+				),
+				ButtonModifier(
+					LabelElement(lm.get("gui.button.quit")),
+					on_click=lambda: app_state.queue_stop(),
+					style=BUTTON_STYLE,
+					style_hovered=BUTTON_STYLE_HOVERED,
+					style_pressed=BUTTON_STYLE_PRESSED
+				),
 			)
 		)
 

@@ -233,6 +233,14 @@ def enable_bounds() -> None:
 	global _show_bounds
 	_show_bounds = True
 
+def disable_bounds() -> None:
+	global _show_bounds
+	_show_bounds = False
+
+def toggle_bounds() -> None:
+	global _show_bounds
+	_show_bounds = not _show_bounds
+
 def show_bounds() -> bool:
 	return _show_bounds
 

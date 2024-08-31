@@ -1,5 +1,4 @@
 from gui import Style
-import util.asset_manager as am
 
 COLOR_WINE = (96, 41, 62)
 COLOR_WHITE = (255, 255, 255)
@@ -9,17 +8,21 @@ COLOR_RED = (255, 0, 0)
 
 HEADER_STYLE = Style(
 	text_color=COLOR_WHITE,
-	font=am.get_font("assets/font/Comfortaa-Bold.ttf", 50),
+	font="Comfortaa",
+	font_size=35,
+	bold=True
 )
 
 LABEL_STYLE = Style(
 	text_color=COLOR_WHITE,
-	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 35),
+	font="Comfortaa",
+	font_size=35
 )
 
 SMALL_LABEL_STYLE = Style(
 	text_color=COLOR_WHITE,
-	font=am.get_font("assets/font/Comfortaa-Regular.ttf", 20),
+	font="Comfortaa",
+	font_size=20,
 )
 
 

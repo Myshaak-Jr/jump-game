@@ -43,9 +43,7 @@ class WinMenuScene(IScene):
 		self.darken.set_alpha(128)
 
 	def handle_event(self, event: pygame.event.Event) -> None:
-		if event.type == pygame.KEYDOWN:
-			if event.key == pygame.K_ESCAPE:
-				app_state.queue_scene(self.last_level)
+		pass
 	
 	def update(self, dt: float) -> None:
 		self._gui.update(dt)

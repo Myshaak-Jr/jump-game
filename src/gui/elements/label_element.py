@@ -1,6 +1,7 @@
 import pygame
 from ..base import GUIElement
 from ..style import AnyStyle
+import util.asset_manager as am
 
 
 class LabelElement(GUIElement):
@@ -20,18 +21,22 @@ class LabelElement(GUIElement):
 	def set_text(self, text: str) -> None:
 		self._text = text
 
+	def _get_font(self) -> pygame.font.Font:
+		style = self.get_style()
+		return am.get_font(style.font, style.font_size, style.bold)
+
 	def render(self, screen: pygame.Surface):
 		super().render(screen)
 		style = self.get_style()
 		color = (style.text_color[0], style.text_color[1], style.text_color[2], int(255 * style.text_opacity))
 		pos = self.get_position()
 		pos = (pos[0] + style.padding_x, pos[1] + style.padding_y)
-		text_surface = style.font.render(self._text, True, color)
+
+		text_surface = self._get_font().render(self._text, True, color)
 		screen.blit(text_surface, pos)
 
 	def get_size(self) -> tuple[float, float]:
-		style = self.get_style()
-		width, height = style.font.size(self._text)
+		width, height = self._get_font().size(self._text)
 
 		super_size = super().get_size()
 

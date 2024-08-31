@@ -1,4 +1,6 @@
 import sys
+
+import pygame
 from core import App, app_state
 from scenes import *
 import util.logger as log
@@ -6,9 +8,7 @@ import util.logger as log
 
 def main() -> int:
 	log.enable()
-#	app_state.enable_fps()
-#	app_state.enable_bounds()
-	app_state.set_window_size(1920 // 2, 1080 // 2)
+	app_state.enable_fps()
 	app_state.register_scene(MainMenuScene)
 	app_state.register_scene(GameOverScene)
 	app_state.register_scene(PauseMenuScene)
@@ -18,6 +18,10 @@ def main() -> int:
 
 	app = None
 	app = App()
+	
+	info = pygame.display.Info()
+	pygame.display.toggle_fullscreen()
+	app_state.set_window_size(info.current_w, info.current_h)
 	app.run("main_menu")
 	app.quit()
 	try:

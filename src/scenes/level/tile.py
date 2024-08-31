@@ -39,10 +39,17 @@ class TileSprite(IHasRect):
 		if zoom != self._last_zoom or self._zoom_cache is None:
 			new_width = int(self._rect.width * zoom)
 			new_height = int(self._rect.height * zoom)
-			self._zoom_cache = pygame.transform.scale(self._sprite, (new_width, new_height))
+			if self._src_rect is not None:
+				new_width *= self._src_rect.width / 64
+				new_height *= self._src_rect.height / 64
+				new_width = int(new_width) + 1
+				new_height = int(new_height) + 1
+				self._zoom_cache = pygame.transform.scale(self._sprite.subsurface(self._src_rect), (new_width, new_height))
+			else:
+				self._zoom_cache = pygame.transform.scale(self._sprite, (new_width, new_height))
 			self._last_zoom = zoom
-
-		screen.blit(self._zoom_cache, rect, self._src_rect)
+ 
+		screen.blit(self._zoom_cache, rect)
 
 
 class TileCollider(IHasRect):

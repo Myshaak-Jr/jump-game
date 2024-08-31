@@ -3,14 +3,13 @@ import math
 from typing import override
 from core import IScene, app_state, PlanetData
 import pygame
-from gui import Container, Style, ButtonModifier, ImageElement
+from gui import Container, Style
 from gui.containers.flex_container import Alignment, Direction, FlexContainer, Justification
 from gui.elements.label_element import LabelElement
 from gui.elements.slider_element import SliderElement
 from scenes.level.util import GLOBAL_SCALE
 from styles import SMALL_LABEL_STYLE
 import util.language_manager as lm
-import util.asset_manager as am
 from util.my_math import IVec2, Vec2
 from .camera import Camera
 from .player import Player
@@ -41,6 +40,24 @@ SLIDER_STYLE_PRESSED = Style(
 SLIDER_THRUST_TEXT = "Thrust: {:.3f}"
 SLIDER_THRUST_DECAY_TEXT = "Thrust Decay: {:.3f}"
 
+SRC_RECTS: list[tuple[int, tuple[int, int, int, int]]] = [
+	(-18, (192, 302, 64, 88)),
+	(0, (192, 192, 64, 70)),
+	(-18, (0, 302, 64, 88)),
+	(0, (0, 192, 64, 70)),
+	(-18, (192, 46, 64, 82)),
+	(0, (192, 128, 64, 64)),
+	(-18, (0, 46, 64, 82)),
+	(0, (0, 128, 64, 64)),
+	(-18, (128, 302, 64, 88)),
+	(0, (128, 192, 64, 70)),
+	(-18, (64, 302, 64, 88)),
+	(0, (64, 192, 64, 70)),
+	(-18, (128, 46, 64, 82)),
+	(0, (128, 128, 64, 64)),
+	(-18, (64, 46, 64, 82)),
+	(0, (64, 128, 64, 64)),
+]
 
 type HColliderGroup = list[IVec2]
 type VColliderGroup = list[HColliderGroup]
@@ -113,6 +130,8 @@ class LevelScene(IScene):
 		if event.type == pygame.KEYDOWN:
 			if event.key == pygame.K_ESCAPE:
 				app_state.queue_scene("pause_menu", self)
+			if event.key == pygame.K_F3:
+				app_state.toggle_bounds()
 	
 	@override
 	def update(self, dt: float) -> None:
@@ -162,21 +181,42 @@ class LevelScene(IScene):
 		raise ValueError("Invalid level data")
 
 	def _add_tile_collider(self, x: int, y: int, width: int = 1, height: int = 1) -> None:
-		# if y == 0:
-		# 	height += 50
-		# 	y -= 50
-		
+		if y == 0:
+			height += 50
+			y -= 50
+			 
 		tile = TileCollider(self._space, x * GLOBAL_SCALE, y * GLOBAL_SCALE, width * GLOBAL_SCALE, height * GLOBAL_SCALE)
 		self._tile_colliders.append(tile)
 
-	def _add_tile_sprite(self, x: int, y: int) -> None:
-			self._tile_sprites.append(TileSprite(
-				x * GLOBAL_SCALE,
-				y * GLOBAL_SCALE,
-				GLOBAL_SCALE,
-				GLOBAL_SCALE,
-				"assets/image/tiles/debug_tile.png",
-			))
+	def _add_tile_sprite(self, x: int, y: int, adjacency_id: int) -> None:
+		y_offset, src_rect = SRC_RECTS[adjacency_id]
+
+		y_offset /= 64
+
+		self._tile_sprites.append(TileSprite(
+			x * GLOBAL_SCALE,
+			(y + y_offset) * GLOBAL_SCALE,
+			GLOBAL_SCALE,
+			GLOBAL_SCALE,
+			"assets/image/tiles/sulius_tileset.png",
+			src_rect=pygame.Rect(src_rect)
+		))
+
+	def _is_top(self, pos: IVec2, count_level_edge: bool = False) -> bool:
+		if pos.y == 0: return count_level_edge
+		return self._level.level_data[pos.y - 1][pos.x] != "#"
+	
+	def _is_bottom(self, pos: IVec2, count_level_edge: bool = False) -> bool:
+		if pos.y == self._level.height - 1: return count_level_edge
+		return self._level.level_data[pos.y + 1][pos.x] != "#"
+	
+	def _is_left(self, pos: IVec2, count_level_edge: bool = False) -> bool:
+		if pos.x == 0: return count_level_edge
+		return self._level.level_data[pos.y][pos.x - 1] != "#"
+	
+	def _is_right(self, pos: IVec2, count_level_edge: bool = False) -> bool:
+		if pos.x == self._level.width - 1: return count_level_edge
+		return self._level.level_data[pos.y][pos.x + 1] != "#"
 
 	def _load_level(self) -> None:
 		self._level_size = Vec2(self._level.width * GLOBAL_SCALE, self._level.height * GLOBAL_SCALE)
@@ -190,9 +230,8 @@ class LevelScene(IScene):
 			for x in range(self._level.width):
 				if self._level.level_data[y][x] != "#": continue
 				pos = IVec2(x, y)
-				is_left = x == 0 or self._level.level_data[y][x-1] != "#"
 
-				if is_left:
+				if self._is_left(pos, True):
 					nth = 0
 					if x in h_collider_groups:
 						h_collider_groups[x].append([pos])
@@ -233,23 +272,31 @@ class LevelScene(IScene):
 		for y in range(self._level.height):
 			for x in range(self._level.width):
 				if self._level.level_data[y][x] == "#":
-					self._add_tile_sprite(x, y)
+					pos = IVec2(x, y)
+
+					adjacency_id = 0
+					if not self._is_top(pos): adjacency_id += 1
+					if not self._is_right(pos): adjacency_id += 2
+					if not self._is_bottom(pos): adjacency_id += 4
+					if not self._is_left(pos): adjacency_id += 8
+			
+					self._add_tile_sprite(x, y, adjacency_id)
 		
 	def _check_win(self) -> None:
 		if self._player.get_x() > self._level_size.x - 1:
 			app_state.queue_scene("win_menu", self)
 
 	def _setup_gui(self) -> None:		
-		self._gui = Container(app_state.get_width(), app_state.get_height()).with_children(
-			ButtonModifier(
-				ImageElement(am.get_image("assets/image/gui/pause.png", app_state.get_width() * 0.1)),
-				on_click = lambda: app_state.queue_scene("pause_menu", self),
-				left = 20,
-				top = 20,
-				style_hovered = Style(image_darken=0.2),
-				style_pressed = Style(image_darken=0.2, image_scale=1.1),
-			)
-		)
+		self._gui = Container(app_state.get_width(), app_state.get_height())#.with_children(
+			# ButtonModifier(
+			# 	ImageElement(am.get_image("assets/image/gui/pause.png", app_state.get_width() * 0.1)),
+			# 	on_click = lambda: app_state.queue_scene("pause_menu", self),
+			# 	left = 20,
+			# 	top = 20,
+			# 	style_hovered = Style(image_darken=0.2),
+			# 	style_pressed = Style(image_darken=0.2, image_scale=1.1),
+			# )
+		#)
 
 		if app_state.show_fps():
 			self._fps_counter = LabelElement("FPS: 0", style=SMALL_LABEL_STYLE.updated(Style(text_color=(255, 0, 0))), right=20, bottom=20)

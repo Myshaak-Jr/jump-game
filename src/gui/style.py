@@ -1,7 +1,5 @@
 from __future__ import annotations
-import pygame
 from dataclasses import dataclass, fields
-import util.asset_manager as am
 from copy import copy
 
 
@@ -40,6 +38,10 @@ def _parent_updated[T: AnyStyle](original: T, parent: AnyStyle | None) -> T:
 		updated.text_opacity = parent.text_opacity
 	if parent.font is not None:
 		updated.font = parent.font
+	if parent.font_size is not None:
+		updated.font_size = parent.font_size
+	if parent.bold is not None:
+		updated.bold = parent.bold
 	
 	return updated
 
@@ -48,7 +50,9 @@ def _parent_updated[T: AnyStyle](original: T, parent: AnyStyle | None) -> T:
 class Style:
 	text_color: tuple[int, int, int] | None = None
 	text_opacity: float | None = None
-	font: pygame.font.Font | None = None
+	font: str | None = None
+	font_size: int | None = None
+	bold: bool | None = None
 	background_color: tuple[int, int, int] | None = None
 	background_opacity: float | None = None
 	border_color: tuple[int, int, int] | None = None
@@ -78,7 +82,9 @@ class Style:
 class FullStyle:
 	text_color: tuple[int, int, int]
 	text_opacity: float
-	font: pygame.font.Font
+	font: str
+	font_size: int
+	bold: bool
 	background_color: tuple[int, int, int]
 	background_opacity: float
 	border_color: tuple[int, int, int]
@@ -108,7 +114,9 @@ class FullStyle:
 DEFAULT_STYLE = FullStyle(
 	text_color=(0, 0, 0),
 	text_opacity=1,
-	font=am.get_font(),
+	font="default",
+	font_size=12,
+	bold=False,
 	background_color=(0, 0, 0),
 	background_opacity=0,
 	border_color=(0, 0, 0),

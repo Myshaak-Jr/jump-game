@@ -19,7 +19,7 @@ class Player(IHasRect):
 	def __init__(self, space: pymunk.Space, x: float, y: float, width: float, planet: PlanetData, player_data: PlayerData):
 		self._planet = planet
 		self._player_data = player_data
-		self._color = (0, 255, 0)
+		self._color = (255, 0, 0)
 		self._alive = True
 
 		# Pygame representation
@@ -85,7 +85,9 @@ class Player(IHasRect):
 			force = force.rotate(-self._body.angle)
 			self._body.apply_force_at_local_point(force.to_tuple())
 		if key_state[pygame.K_LSHIFT]:
-			self._body.apply_force_at_local_point((0, self._calc_thrust_power(-1)))
+			force = Vec2(0, self._calc_thrust_power(-1))
+			force = force.rotate(-self._body.angle)
+			self._body.apply_force_at_local_point(force.to_tuple())
 
 	def _push_right(self):
 		force = Vec2(10, 0)
