@@ -63,6 +63,8 @@ class ImageElement(GUIElement):
 		image_w, image_h = image.get_size()
 		image = pygame.transform.scale(image, (int(image_w * style.image_scale), int(image_h * style.image_scale)))
 
+		image.set_alpha(int(255 * style.image_opacity))
+
 		screen.blit(image, self.get_position())
 	
 	def get_size(self) -> tuple[float, float]:

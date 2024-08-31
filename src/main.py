@@ -4,7 +4,7 @@ import pygame
 from core import App, app_state
 from scenes import *
 import util.logger as log
- 
+
 
 def main() -> int:
 	log.enable()
@@ -20,8 +20,9 @@ def main() -> int:
 	app = App()
 	
 	info = pygame.display.Info()
-	pygame.display.toggle_fullscreen()
-	app_state.set_window_size(info.current_w, info.current_h)
+	app_state.set_window_size(info.current_w // 2, info.current_h // 2)
+	pygame.display.set_window_position((info.current_w // 4, info.current_h // 4)) 
+
 	app.run("main_menu")
 	app.quit()
 	try:

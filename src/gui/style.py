@@ -64,6 +64,7 @@ class Style:
 	image_darken: float | None = None
 	image_rotation: float | None = None
 	image_scale: float | None = None
+	image_opacity: float | None = None
 	slider_track_color: tuple[int, int, int] | None = None
 	slider_track_opacity: float | None = None
 	slider_track_width: int | None = None
@@ -96,6 +97,7 @@ class FullStyle:
 	image_darken: float
 	image_rotation: float
 	image_scale: float
+	image_opacity: float
 	slider_track_color: tuple[int, int, int]
 	slider_track_opacity: float
 	slider_track_width: int
@@ -129,6 +131,7 @@ DEFAULT_STYLE = FullStyle(
 	image_darken=0,
 	image_rotation=0,
 	image_scale=1,
+	image_opacity=1,
 	# Slider properties
 	slider_track_color=(0, 0, 0),
 	slider_track_opacity=1,

@@ -7,6 +7,7 @@ from gui import Container, Style
 from gui.containers.flex_container import Alignment, Direction, FlexContainer, Justification
 from gui.elements.label_element import LabelElement
 from gui.elements.slider_element import SliderElement
+from scenes.level.background import Background
 from scenes.level.util import GLOBAL_SCALE
 from styles import SMALL_LABEL_STYLE
 import util.language_manager as lm
@@ -90,13 +91,14 @@ class LevelScene(IScene):
 		# Setup the player
 		self._player_data = app_state.get_player_data()
 
-		self._player = Player(self._space, 0.0, 0.0 , 0.5 * GLOBAL_SCALE, self._planet, self._player_data)
-		self._player.set_pos(self._calc_start_pos())
+		self._player = Player(self._space, *self._calc_start_pos().to_tuple(), 1 * GLOBAL_SCALE, self._planet, self._player_data)
 
 		# Setup the camera and player
-		self._camera = Camera(int(60 / GLOBAL_SCALE), 20.0)
+		self._camera = Camera(60, 20.0)
 		self._camera.follow_object(self._player, Vec2(0.2, 0.6))
 
+		# Setup the background
+		self._background = Background(self._planet, lambda x: x)
 
 		# Setup the GUI and Caption
 		self._setup_gui()
@@ -116,6 +118,8 @@ class LevelScene(IScene):
 		self._camera.update(dt, self._level_size)
 
 	def render_game_content(self, screen: pygame.Surface) -> None:
+		self._background.render(screen, self._camera, self._level_size)
+
 		for tile in self._tile_sprites:
 			tile.render(screen, self._camera)
 
@@ -124,6 +128,9 @@ class LevelScene(IScene):
 				tile.render(screen, self._camera)
 
 		self._player.render(screen, self._camera)
+
+		if app_state.show_bounds():
+			self._player.render_bounds(screen, self._camera)
 
 	@override
 	def handle_event(self, event: pygame.event.Event) -> None:
@@ -170,7 +177,7 @@ class LevelScene(IScene):
 		self._gui.on_scene_exit()
 
 	def _calc_start_pos(self) -> Vec2:
-		return Vec2(0.5 * GLOBAL_SCALE - self._player.get_width() / 2, self._calc_start_y() - self._player.get_height())
+		return Vec2(0.5 * GLOBAL_SCALE, self._calc_start_y())
 
 	def _calc_start_y(self) -> float:
 		for y in range(self._level.height):
@@ -198,7 +205,7 @@ class LevelScene(IScene):
 			(y + y_offset) * GLOBAL_SCALE,
 			GLOBAL_SCALE,
 			GLOBAL_SCALE,
-			"assets/image/tiles/sulius_tileset.png",
+			f"assets/image/tilesets/{self._planet.name}.png",
 			src_rect=pygame.Rect(src_rect)
 		))
 

@@ -3,7 +3,7 @@ from core import app_state
 import math
 import pygame
 from util import my_math
-from util.my_math import Vec2
+from util.my_math import IVec2, Vec2
 
 
 __all__ = [
@@ -69,12 +69,17 @@ class Camera(IHasRect):
 
 		return pygame.Rect(new_x, new_y, new_w, new_h)
 	
-	def apply_point(self, point: Vec2) -> Vec2:
+	def apply_pos(self, point: Vec2) -> IVec2:
 		new_x = math.floor((point.x - self._pos.x) * self._zoom)
 		new_y = math.floor((point.y - self._pos.y) * self._zoom)
 
-		return Vec2(new_x, new_y)
+		return IVec2(new_x, new_y)
 
+	def apply_size(self, size: Vec2) -> IVec2:
+		new_w = math.ceil(size.x * self._zoom)
+		new_h = math.ceil(size.y * self._zoom)
+		return IVec2(new_w, new_h)
+	
 	def apply_inverse(self, rect: pygame.Rect) -> pygame.FRect:
 		new_x = rect.x / self._zoom + self._pos.x
 		new_y = rect.y / self._zoom + self._pos.y
@@ -83,11 +88,16 @@ class Camera(IHasRect):
 
 		return pygame.FRect(new_x, new_y, new_w, new_h)
 	
-	def apply_inverse_point(self, point: Vec2) -> Vec2:
+	def apply_inverse_pos(self, point: IVec2) -> Vec2:
 		new_x = point.x / self._zoom + self._pos.x
 		new_y = point.y / self._zoom + self._pos.y
 
 		return Vec2(new_x, new_y)
+
+	def apply_inverse_size(self, size: IVec2) -> Vec2:
+		new_w = size.x / self._zoom
+		new_h = size.y / self._zoom
+		return Vec2(new_w, new_h)
 
 	def clip(self, entity: IHasRect) -> bool:
 		rect = entity.get_rect()

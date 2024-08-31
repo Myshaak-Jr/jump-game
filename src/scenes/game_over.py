@@ -8,6 +8,8 @@ from util import my_math
 import util.language_manager as lm
 from styles import COLOR_WHITE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, HEADER_STYLE
 from .level import LevelScene
+from gui.elements.image_element import ImageElement
+import util.asset_manager as am
 
 
 class GameOverScene(IScene):
@@ -16,6 +18,10 @@ class GameOverScene(IScene):
 		self._slowmo_factor = 1
 
 		# create the GUI
+		self._background = ImageElement(
+			am.get_image("assets/image/gui/background.png", app_state.get_width()),
+			style=Style(image_opacity=0.0)
+		)
 		self._gui = Container(width=app_state.get_width(), height=app_state.get_height(), style=Style()).with_children(
 			FlexContainer(app_state.get_width(), direction=Direction.COLUMN, gap = 25, top = app_state.get_height() / 4).with_children(
 				LabelElement(lm.get("gui.label.game_over"), style=HEADER_STYLE),
@@ -49,7 +55,10 @@ class GameOverScene(IScene):
  
 	def update(self, dt: float) -> None:
 		self._slowmo_factor = my_math.ease(self._slowmo_factor, 0.0, 0.3, dt)
-		self._darkening_surface.set_alpha(int(255 * (1 - self._slowmo_factor * 0.5)))
+		self._darkening_surface.set_alpha(int(255 * (1 - self._slowmo_factor)))
+
+		self._background.update(dt)
+		self._background.update_style(Style(image_opacity=(1.0 - self._slowmo_factor)))
 
 		self._last_level.update_game_content(dt * self._slowmo_factor * 0.2)
 		self._gui.update(dt)
@@ -60,7 +69,7 @@ class GameOverScene(IScene):
 		self._last_level.render_game_content(screen)
 
 		screen.blit(self._darkening_surface, (0, 0))
-
+		self._background.render(screen)
 		self._gui.render(screen)
 
 		pygame.display.flip()
