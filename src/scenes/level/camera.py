@@ -1,4 +1,4 @@
-from scenes.level.util import IHasRect
+from scenes.level.util import IHasPos, IHasRect
 from core import app_state
 import math
 import pygame
@@ -16,7 +16,7 @@ class Camera(IHasRect):
 		self._pos = Vec2(0, 0)
 		self._zoom = zoom
 		self._easing_rate = easing_rate
-		self._following: IHasRect | None = None
+		self._following: IHasPos | None = None
 		self._relative_pos = Vec2(0.5)
 
 	def zoom(self, delta: int) -> None:
@@ -27,7 +27,7 @@ class Camera(IHasRect):
 	def get_zoom(self) -> int:
 		return self._zoom
 
-	def follow_object(self, obj: IHasRect, relative_pos: Vec2 = Vec2(0.5)) -> None:
+	def follow_object(self, obj: IHasPos, relative_pos: Vec2 = Vec2(0.5)) -> None:
 		self._following = obj
 		self._relative_pos = relative_pos
 
@@ -36,12 +36,12 @@ class Camera(IHasRect):
 	def _calc_target_pos(self) -> Vec2:
 		if self._following is None: return self._pos
 
-		obj_rect = self._following.get_rect()
+		obj_pos = self._following.get_pos()
 
 		view_width = app_state.get_width() / self._zoom
 		view_height = app_state.get_height() / self._zoom
-		target_x = obj_rect.x - view_width * self._relative_pos.x + obj_rect.width / 2
-		target_y = obj_rect.y - view_height * self._relative_pos.y + obj_rect.height / 2
+		target_x = obj_pos.x - view_width * self._relative_pos.x
+		target_y = obj_pos.y - view_height * self._relative_pos.y
 
 		return Vec2(target_x, target_y)
 

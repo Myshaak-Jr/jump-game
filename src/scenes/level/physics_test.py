@@ -1,3 +1,4 @@
+from math import radians
 from typing import override
 import pymunk
 import pymunk.pygame_util
@@ -30,79 +31,91 @@ def floor(space: pymunk.Space):
 def car(space: pymunk.Space) -> tuple[pymunk.Body, pymunk.Body, pymunk.Body]:
 	pos = Vec2d(400, 100)
 
-	wheel_color = 52, 219, 119, 255
-	axle_color = 219, 119, 52, 255
-	mass = 100
-	radius = 25
-	moment = pymunk.moment_for_circle(mass, 20, radius)
-	wheel1_b = pymunk.Body(mass, moment)
-	wheel1_s = pymunk.Circle(wheel1_b, radius)
-	wheel1_s.friction = 1.5
-	wheel1_s.color = wheel_color
-	space.add(wheel1_b, wheel1_s)
+	SCALE = 2
 
+	CHASSI_WIDTH = 60 * SCALE
+	CHASSI_HEIGHT = 30 * SCALE
+
+	AXLE_LENGTH = 30 * SCALE
+	AXLE_RADIUS = 3 * SCALE
+	AXLE_ANGLE = 40
+
+	WHEEL_RADIUS = 15 * SCALE
+
+
+	size = (CHASSI_WIDTH, CHASSI_HEIGHT)
 	mass = 100
-	radius = 25
-	moment = pymunk.moment_for_circle(mass, 20, radius)
-	wheel2_b = pymunk.Body(mass, moment)
-	wheel2_s = pymunk.Circle(wheel2_b, radius)
-	wheel2_s.friction = 1.5
-	wheel2_s.color = wheel_color
-	space.add(wheel2_b, wheel2_s)
-	
-	mass = 100
-	size = (50, 30)
 	moment = pymunk.moment_for_box(mass, size)
 	chassi_b = pymunk.Body(mass, moment)
 	chassi_s = pymunk.Poly.create_box(chassi_b, size)
+	chassi_s.friction = 0.5
 	space.add(chassi_b, chassi_s)
 
-	# vs = [(0, 0), (25, 45), (0, 45)]
-	# shovel_s = pymunk.Poly(chassi_b, vs, transform=pymunk.Transform(tx=85))
-	# shovel_s.friction = 0.5
-	# shovel_s.color = shovel_color
-	# space.add(shovel_s)
+	wheel1_b = pymunk.Body(100, pymunk.moment_for_circle(100, 20, WHEEL_RADIUS))
+	wheel1_s = pymunk.Circle(wheel1_b, WHEEL_RADIUS)
+	wheel1_s.friction = 1.5
+	space.add(wheel1_b, wheel1_s)
 
-	wheel1_b.position = pos - (55, 0)
-	wheel2_b.position = pos + (55, 0)
-	chassi_b.position = pos + (0, -25)
+	wheel2_b = pymunk.Body(100, pymunk.moment_for_circle(100, 20, WHEEL_RADIUS))
+	wheel2_s = pymunk.Circle(wheel2_b, WHEEL_RADIUS)
+	wheel2_s.friction = 1.5
+	space.add(wheel2_b, wheel2_s)
 
+	AXLE1_TANGENT = Vec2d(1, 0).rotated(radians(-AXLE_ANGLE))
 
-	dist1 = wheel1_b.position.get_distance(chassi_b.position + (-25, -15))
-	dist2 = wheel2_b.position.get_distance(chassi_b.position + (25, -15))
-
+	AXLE1_P1, AXLE1_P2 = -AXLE_LENGTH / 2 * AXLE1_TANGENT, AXLE_LENGTH / 2 * AXLE1_TANGENT
 	mass = 10
-	axle1_p1, axle1_p2 = wheel1_b.position, chassi_b.position + (-25, 15)
-	moment = pymunk.moment_for_segment(mass, axle1_p1, axle1_p2, 2)
+	moment = pymunk.moment_for_segment(10, AXLE1_P1, AXLE1_P2, AXLE_RADIUS)
 	axle1_b = pymunk.Body(mass, moment)
-	axle1_s = pymunk.Segment(axle1_b, axle1_p1, axle1_p2, 2)
+	axle1_s = pymunk.Segment(axle1_b, AXLE1_P1, AXLE1_P2, AXLE_RADIUS)
 	axle1_s.friction = 1.5
-	axle1_s.color = axle_color
 	space.add(axle1_b, axle1_s)
 
+	AXLE2_TANGENT = Vec2d(1, 0).rotated(radians(AXLE_ANGLE))
+
+	AXLE2_P1, AXLE2_P2 = -AXLE_LENGTH / 2 * AXLE2_TANGENT, AXLE_LENGTH / 2 * AXLE2_TANGENT
 	mass = 10
-	axle2_p1, axle2_p2 = wheel2_b.position, chassi_b.position + (25, 15)
-	moment = pymunk.moment_for_segment(mass, axle2_p1, axle2_p2, 2)
+	moment = pymunk.moment_for_segment(10, AXLE2_P1, AXLE2_P2, AXLE_RADIUS)
 	axle2_b = pymunk.Body(mass, moment)
-	axle2_s = pymunk.Segment(axle2_b, axle2_p1, axle2_p2, 2)
+	axle2_s = pymunk.Segment(axle2_b, AXLE2_P1, AXLE2_P2, AXLE_RADIUS)
 	axle2_s.friction = 1.5
-	axle2_s.color = axle_color
 	space.add(axle2_b, axle2_s)
 
-
-
-	space.add(
-		#pymunk.DampedSpring(wheel1_b, chassi_b, (0, 0), (-25, -15), dist1, 100000, 10),
-		pymunk.PinJoint(wheel1_b, axle1_b, (0, 0), wheel1_b.position),
-		pymunk.PinJoint(chassi_b, axle1_b, (-25, 15), chassi_b.position),
-		#pymunk.RotaryLimitJoint(chassi_b, axle1_b, -0.5, 0.5),
-
-		#pymunk.DampedSpring(wheel2_b, chassi_b, (0, 0), (25, -15), dist2, 100000, 10),
-		pymunk.PinJoint(wheel2_b, axle2_b, (0, 0), wheel2_b.position),
-		pymunk.PinJoint(chassi_b, axle2_b, (25, 15), chassi_b.position),
-		#pymunk.RotaryLimitJoint(chassi_b, axle2_b, -0.5, 0.5),
-#		pymunk.DampedRotarySpring(wheel1_b, chassi_b, 45, 100000000.0, 10000),
+	chassi_b.position = pos
+	axle1_b.position = pos + (
+		-(CHASSI_WIDTH / 2 - AXLE_RADIUS) - AXLE1_P2.x,
+		CHASSI_HEIGHT / 2 - AXLE1_P2.y - AXLE_RADIUS
 	)
+	axle2_b.position = pos + (
+		CHASSI_WIDTH / 2 - AXLE2_P1.x - AXLE_RADIUS,
+		CHASSI_HEIGHT / 2 - AXLE2_P1.y - AXLE_RADIUS
+	)
+
+	wheel1_b.position = axle1_b.position + AXLE1_P1
+	wheel2_b.position = axle2_b.position + AXLE2_P2
+
+	j1 = pymunk.PivotJoint(chassi_b, axle1_b,
+		(-(CHASSI_WIDTH / 2 - AXLE_RADIUS), CHASSI_HEIGHT / 2 - AXLE_RADIUS),
+		AXLE1_P2
+	)
+	j1.collide_bodies = False
+	s1 = pymunk.DampedRotarySpring(chassi_b, axle1_b, 0, 100000000, 900)
+	space.add(j1, s1)
+
+	j2 = pymunk.PivotJoint(chassi_b, axle2_b,
+		(CHASSI_WIDTH / 2 - AXLE_RADIUS, CHASSI_HEIGHT / 2 - AXLE_RADIUS),
+		AXLE2_P1
+	)
+	j2.collide_bodies = False
+	s2 = pymunk.DampedRotarySpring(chassi_b, axle2_b, 0, 100000000, 900)
+	space.add(j2, s2)
+
+	j3 = pymunk.PivotJoint(axle1_b, wheel1_b, AXLE1_P1, (0, 0))
+	j3.collide_bodies = False
+	space.add(j3)
+	j4 = pymunk.PivotJoint(axle2_b, wheel2_b, AXLE2_P2, (0, 0))
+	j4.collide_bodies = False
+	space.add(j4)
 
 	return chassi_b, wheel1_b, wheel2_b
 
@@ -110,7 +123,7 @@ def car(space: pymunk.Space) -> tuple[pymunk.Body, pymunk.Body, pymunk.Body]:
 class PhysicsTestScene(IScene):
 	def __init__(self):
 		self._space = pymunk.Space()
-		self._space.gravity = 0, 0
+		self._space.gravity = 0, 900
 
 		floor(self._space)
 		self._car = car(self._space)

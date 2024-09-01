@@ -75,6 +75,7 @@ class LevelScene(IScene):
 		# Setup the space
 		self._space = pymunk.Space()
 		self._space.gravity = 0, self._planet.gravity
+		self._space.damping = 0.99
 
 		# Setup the planet and level
 		if planet.current_level >= len(planet.levels):
@@ -91,10 +92,10 @@ class LevelScene(IScene):
 		# Setup the player
 		self._player_data = app_state.get_player_data()
 
-		self._player = Player(self._space, *self._calc_start_pos().to_tuple(), 2.0 * GLOBAL_SCALE, self._planet, self._player_data)
+		self._player = Player(self._space, 3 * GLOBAL_SCALE, 2.0 * GLOBAL_SCALE, 2.0 * GLOBAL_SCALE, self._planet, self._player_data)
 
 		# Setup the camera and player
-		self._camera = Camera(int(60 / GLOBAL_SCALE), 20.0)
+		self._camera = Camera(int(40 * (app_state.get_width() / 1920)), 20.0)
 		self._camera.follow_object(self._player, Vec2(0.2, 0.6))
 
 		# Setup the background
@@ -129,9 +130,6 @@ class LevelScene(IScene):
 
 		self._player.render(screen, self._camera)
 
-		if app_state.show_bounds():
-			self._player.render_bounds(screen, self._camera)
-
 	@override
 	def handle_event(self, event: pygame.event.Event) -> None:
 		if event.type == pygame.KEYDOWN:
@@ -150,7 +148,8 @@ class LevelScene(IScene):
 		if not self._player.is_alive():
 			app_state.queue_scene("game_over", self)
 
-		self._check_win()
+		if self._player.has_won():
+			app_state.queue_scene("win_menu", self)
 
 		self._gui.update(dt)
 
@@ -289,10 +288,6 @@ class LevelScene(IScene):
 			
 					self._add_tile_sprite(x, y, adjacency_id)
 		
-	def _check_win(self) -> None:
-		if self._player.get_x() > self._level_size.x - 1:
-			app_state.queue_scene("win_menu", self)
-
 	def _setup_gui(self) -> None:		
 		self._gui = Container(app_state.get_width(), app_state.get_height())#.with_children(
 			# ButtonModifier(
