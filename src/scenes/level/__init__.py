@@ -91,10 +91,10 @@ class LevelScene(IScene):
 		# Setup the player
 		self._player_data = app_state.get_player_data()
 
-		self._player = Player(self._space, *self._calc_start_pos().to_tuple(), 1 * GLOBAL_SCALE, self._planet, self._player_data)
+		self._player = Player(self._space, *self._calc_start_pos().to_tuple(), 2.0 * GLOBAL_SCALE, self._planet, self._player_data)
 
 		# Setup the camera and player
-		self._camera = Camera(60, 20.0)
+		self._camera = Camera(int(60 / GLOBAL_SCALE), 20.0)
 		self._camera.follow_object(self._player, Vec2(0.2, 0.6))
 
 		# Setup the background

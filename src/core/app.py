@@ -114,10 +114,13 @@ class App:
 			dt = min(dt, 1/30) # clamp the delta time to 1/30
 			self._update(dt)
 			self._render()
+		
+		self._scene.on_exit()
 
 	def quit(self) -> None:
 		"""Quits the application."""
 		log.info("Exiting the app...")
+		del self._scene # this is needed to prevent failing to free the physics space
 		pygame.quit()
 	
 	def _handle_events(self) -> None:

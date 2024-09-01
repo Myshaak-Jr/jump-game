@@ -61,14 +61,18 @@ class Camera(IHasRect):
 
 	def apply(self, obj: IHasRect) -> pygame.Rect:
 		obj_rect = obj.get_rect()
+		return self.apply_rect(obj_rect)
 
-		new_x = math.floor((obj_rect.x - self._pos.x) * self._zoom)
-		new_y = math.floor((obj_rect.y - self._pos.y) * self._zoom)
-		new_w = math.ceil(obj_rect.width * self._zoom)
-		new_h = math.ceil(obj_rect.height * self._zoom)
+	
+	def apply_rect(self, rect: pygame.FRect) -> pygame.Rect:
+		new_x = math.floor((rect.x - self._pos.x) * self._zoom)
+		new_y = math.floor((rect.y - self._pos.y) * self._zoom)
+		new_w = math.ceil(rect.width * self._zoom)
+		new_h = math.ceil(rect.height * self._zoom)
 
 		return pygame.Rect(new_x, new_y, new_w, new_h)
-	
+
+
 	def apply_pos(self, point: Vec2) -> IVec2:
 		new_x = math.floor((point.x - self._pos.x) * self._zoom)
 		new_y = math.floor((point.y - self._pos.y) * self._zoom)
