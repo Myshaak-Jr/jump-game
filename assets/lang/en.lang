@@ -9,6 +9,7 @@ gui.button.main_menu=Main Menu
 gui.button.continue=Continue
 gui.button.next_level=Next Level
 gui.button.quit=Exit Game
+gui.button.restart=Restart Level
 
 gui.label.pause=Paused
 gui.label.game_over=Game Over!

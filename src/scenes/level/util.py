@@ -7,11 +7,9 @@ from util.my_math import Vec2
 
 __all__ = [
 	"IHasRect",
-	"GLOBAL_SCALE"
+	"IHasPos"
 ]
 
-
-GLOBAL_SCALE = 3.0
 
 class IHasPos(ABC):
 	@abstractmethod

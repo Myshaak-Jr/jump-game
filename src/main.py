@@ -20,7 +20,7 @@ def main() -> int:
 		app_state.register_scene(AudioSettingsScene)
 		app_state.register_scene(LevelScene)
 		app_state.register_scene(PhysicsTestScene)
-
+    
 		app = App()
 		
 		info = pygame.display.Info()

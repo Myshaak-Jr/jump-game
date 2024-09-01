@@ -59,7 +59,8 @@ def _init() -> None:
 def _load_player_data(game_data: dict[str, Any]) -> None:
 	global _player_data
 	_player_data = PlayerData(
-		thrust=game_data["player"]["thrust"],
+		thrust_up=game_data["player"]["thrust_up"],
+		thrust_down=game_data["player"]["thrust_down"],
 		thrust_decay=game_data["player"]["thrust_decay"]
 	)
 

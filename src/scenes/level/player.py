@@ -7,7 +7,7 @@ from util.my_math import Vec2
 from .camera import Camera
 from core import PlanetData, PlayerData
 import math
-from .util import GLOBAL_SCALE, IHasPos
+from .util import IHasPos
 from random import choice
 import util.asset_manager as am
 
@@ -18,7 +18,7 @@ __all__ = [
 
 
 class Player(IHasPos):
-	def __init__(self, space: pymunk.Space, x: float, y: float, width: float, planet: PlanetData, player_data: PlayerData):
+	def __init__(self, space: pymunk.Space, x: float, y: float, planet: PlanetData, player_data: PlayerData):
 		self._planet = planet
 		self._player_data = player_data
 		self._color = (255, 0, 0)
@@ -29,7 +29,7 @@ class Player(IHasPos):
 		self._load_sprites()
 		
 		# Pymunk representation
-		self._load_body(space, x, y, width)
+		self._load_body(space, x, y)
 
 		# Apply a force to the right
 		self._push_right()
@@ -39,17 +39,17 @@ class Player(IHasPos):
 		self._car_cache: pygame.Surface | None = None
 		self._wheel_cache: pygame.Surface | None = None
 
-	def _load_body(self, space: pymunk.Space, x: float, y: float, width: float):
-		self._SCALE = 1 / 100 * width
+	def _load_body(self, space: pymunk.Space, x: float, y: float):
+		self._SCALE = 1 / 100 * 6
 
-		self._CHASSI_WIDTH = 60 * self._SCALE
-		self._CHASSI_HEIGHT = 30 * self._SCALE
+		self._CHASSI_WIDTH = 80 * self._SCALE
+		self._CHASSI_HEIGHT = 60 * self._SCALE
 
 		self._AXLE_LENGTH = 30 * self._SCALE
 		self._AXLE_RADIUS = 3 * self._SCALE
 		self._AXLE_ANGLE = 40
 
-		self._WHEEL_RADIUS = 15 * self._SCALE
+		self._WHEEL_RADIUS = 20 * self._SCALE
 
 		self._AXLE1_TANGENT = pymunk.Vec2d(1, 0).rotated(math.radians(-self._AXLE_ANGLE))
 		self._AXLE1_P1, self._AXLE1_P2 = -self._AXLE_LENGTH / 2 * self._AXLE1_TANGENT, self._AXLE_LENGTH / 2 * self._AXLE1_TANGENT
@@ -62,7 +62,7 @@ class Player(IHasPos):
 		moment = pymunk.moment_for_box(mass, size)
 		self._chassi_b = pymunk.Body(mass, moment)
 		self._chassi_s = pymunk.Poly.create_box(self._chassi_b, size)
-		self._chassi_s.friction = 0
+		self._chassi_s.friction = 0.0
 		self._chassi_b.center_of_gravity = (0, self._CHASSI_HEIGHT * 0.6)
 		space.add(self._chassi_b, self._chassi_s)
 
@@ -128,61 +128,70 @@ class Player(IHasPos):
 		self._wheel = am.get_image(f"assets/image/player/wheels/{wheel}")
 
 	def render(self, screen: pygame.Surface, camera: Camera):
+		# Draw the chassi
+
+		if self._last_zoom != camera.get_zoom() or self._car_cache is None:
+			self._last_zoom = camera.get_zoom()
+			aspect_ratio = self._car.get_width() / self._car.get_height()
+			new_height = int(camera.get_zoom() * self._CHASSI_HEIGHT)
+			new_width = int(new_height * aspect_ratio)
+			self._car_cache = pygame.transform.scale(self._car, (new_width, new_height))
+		
+		chassi_screen_pos = camera.apply_pos(Vec2(self._chassi_b.position))
+		chassi_angle = self._chassi_b.angle
+		chassi_sprite = pygame.transform.rotate(self._car_cache, -math.degrees(chassi_angle))
+		chassi_x, chassi_y = chassi_sprite.get_size()
+		chassi_x = chassi_screen_pos.x - chassi_x / 2
+		chassi_y = chassi_screen_pos.y - chassi_y / 2
+
+		screen.blit(chassi_sprite, (chassi_x, chassi_y))
+
+		# vertices = [v for v in self._chassi_s.get_vertices()]
+		# vertices = [v.rotated(chassi_angle) for v in vertices]
+		# vertices = [camera.apply_pos(Vec2(self._chassi_b.position + v)) for v in vertices]
+
+		# pygame.draw.polygon(screen, self._color, [v.to_tuple() for v in vertices])
+
+		# # Draw the center of gravity
+		# cog = camera.apply_pos(Vec2(self._chassi_b.local_to_world(self._chassi_b.center_of_gravity)))
+		# pygame.draw.circle(screen, (0, 0, 255), cog.to_tuple(), 3)
+
 		# Draw the axles
-		axle1_p1 = camera.apply_pos(Vec2(self._axle1_b.position + self._AXLE1_P1))
-		axle1_p2 = camera.apply_pos(Vec2(self._axle1_b.position + self._AXLE1_P2))
-		axle2_p1 = camera.apply_pos(Vec2(self._axle2_b.position + self._AXLE2_P1))
-		axle2_p2 = camera.apply_pos(Vec2(self._axle2_b.position + self._AXLE2_P2))
+		axle1_p1 = camera.apply_pos(Vec2(self._axle1_b.local_to_world(self._AXLE1_P1)))
+		axle1_p2 = camera.apply_pos(Vec2(self._axle1_b.local_to_world(self._AXLE1_P2)))
+		axle2_p1 = camera.apply_pos(Vec2(self._axle2_b.local_to_world(self._AXLE2_P1)))
+		axle2_p2 = camera.apply_pos(Vec2(self._axle2_b.local_to_world(self._AXLE2_P2)))
 		axle_width = camera.get_zoom() * self._AXLE_RADIUS * 2
 
-		pygame.draw.line(screen, self._color, axle1_p1.to_tuple(), axle1_p2.to_tuple(), int(axle_width))
-		pygame.draw.line(screen, self._color, axle2_p1.to_tuple(), axle2_p2.to_tuple(), int(axle_width))
-
-		# Draw the chassi
-		chassi_angle = self._chassi_b.angle
-		vertices = [v for v in self._chassi_s.get_vertices()]
-		vertices = [v.rotated(chassi_angle) for v in vertices]
-		vertices = [camera.apply_pos(Vec2(self._chassi_b.position + v)) for v in vertices]
-
-		pygame.draw.polygon(screen, self._color, [v.to_tuple() for v in vertices])
-
-		# Draw the center of gravity
-		cog = camera.apply_pos(Vec2(self._chassi_b.local_to_world(self._chassi_b.center_of_gravity)))
-		pygame.draw.circle(screen, (0, 0, 255), cog.to_tuple(), 3)
+		pygame.draw.line(screen, "#D4D7D9", axle1_p1.to_tuple(), axle1_p2.to_tuple(), int(axle_width))
+		pygame.draw.line(screen, "#D4D7D9", axle2_p1.to_tuple(), axle2_p2.to_tuple(), int(axle_width))
 
 		# Draw the wheels
-		wheel_radius = int(camera.get_zoom() * self._WHEEL_RADIUS)
+		wheel_radius = int(camera.get_zoom() * (self._WHEEL_RADIUS * 1.1)) # 1.1 because the wheel image is a bit smaller than the actual wheel
+
+		if self._last_zoom != camera.get_zoom() or self._wheel_cache is None:
+			self._last_zoom = camera.get_zoom()
+			self._wheel_cache = pygame.transform.scale(self._wheel, (wheel_radius * 2, wheel_radius * 2))
 		
 		wheel1_screen_pos = camera.apply_pos(Vec2(self._wheel1_b.position))
-		angle = self._wheel1_b.angle
+		wheel1_angle = self._wheel1_b.angle
+		wheel1_sprite = pygame.transform.rotate(self._wheel_cache, -math.degrees(wheel1_angle))
+		wheel1_x, wheel1_y = wheel1_sprite.get_size()
+		wheel1_x = wheel1_screen_pos.x - wheel1_x / 2
+		wheel1_y = wheel1_screen_pos.y - wheel1_y / 2
 
-		pygame.draw.circle(screen, self._color, wheel1_screen_pos.to_tuple(), wheel_radius)
-		pygame.draw.line(screen, (0, 0, 0), wheel1_screen_pos.to_tuple(), (wheel1_screen_pos.x + math.cos(angle) * wheel_radius, wheel1_screen_pos.y + math.sin(angle) * wheel_radius), 2)
-		
+		screen.blit(wheel1_sprite, (wheel1_x, wheel1_y))
+
 		wheel2_screen_pos = camera.apply_pos(Vec2(self._wheel2_b.position))
-		angle = self._wheel2_b.angle
-		pygame.draw.circle(screen, self._color, wheel2_screen_pos.to_tuple(), wheel_radius)
-		pygame.draw.line(screen, (0, 0, 0), wheel2_screen_pos.to_tuple(), (wheel2_screen_pos.x + math.cos(angle) * wheel_radius, wheel2_screen_pos.y + math.sin(angle) * wheel_radius), 2)
+		wheel2_angle = self._wheel2_b.angle
+		wheel2_sprite = pygame.transform.rotate(self._wheel_cache, -math.degrees(wheel2_angle))
+		wheel2_x, wheel2_y = wheel2_sprite.get_size()
+		wheel2_x = wheel2_screen_pos.x - wheel2_x / 2
+		wheel2_y = wheel2_screen_pos.y - wheel2_y / 2
+		
+		screen.blit(wheel2_sprite, (wheel2_x, wheel2_y))
 
 		return
-		if camera.clip(self): return
-		rect = camera.apply(self)
-		
-		zoom = camera.get_zoom()
-		
-		if zoom != self._last_zoom or self._car_cache is None or self._wheel_cache is None:
-			new_width = int(self._rect.width * zoom)
-			new_height = int((self._rect.height - self._rect.width * GROUND_CLEARANCE) * zoom)
-			self._car_cache = pygame.transform.scale(self._car, (new_width, new_height))
-			self._wheel_cache = pygame.transform.scale(self._wheel, (int(WHEEL_1_SIZE * new_width), int(WHEEL_1_SIZE * new_width)))
-			self._last_zoom = int(zoom)
-		
-		# Draw the car
-		screen.blit(self._car_cache, rect.topleft)
-
-		# Draw the wheels
-		screen.blit(self._wheel_cache, (int(rect.x + rect.width * WHEEL_1_X), rect.bottom - self._wheel_cache.get_height()))
-		screen.blit(self._wheel_cache, (int(rect.x + rect.width * WHEEL_2_X), rect.bottom - self._wheel_cache.get_height()))
 
 	def set_pos(self, pos: Vec2):
 		new_pos = pymunk.Vec2d(pos.x, pos.y)
@@ -204,17 +213,15 @@ class Player(IHasPos):
 
 	def physics_update(self):
 		if not self._alive: return
-		if self._chassi_b.velocity.x < self._planet.game_speed * GLOBAL_SCALE:
+		if self._chassi_b.velocity.x < self._planet.game_speed:
 			self._push_right()
 
 		key_state = pygame.key.get_pressed()
 		if key_state[pygame.K_SPACE]:
-			force = Vec2(0, -self._calc_thrust_power(1) * self.get_mass())
-			self._chassi_b.apply_force_at_world_point(force.to_tuple(), self._chassi_b.position)
+			self._chassi_b.apply_force_at_world_point(self._calc_thrust_up_force(), self._chassi_b.position)
 		 
 		elif key_state[pygame.K_LSHIFT]:
-			force = Vec2(0, self._calc_thrust_power(-1) * self.get_mass() / 3)
-			self._chassi_b.apply_force_at_world_point(force.to_tuple(), self._chassi_b.position)
+			self._chassi_b.apply_force_at_world_point(self._calc_thrust_down_force(), self._chassi_b.position)
 		
 		if key_state[pygame.K_a]:
 			self._wheel1_b.angular_velocity = -30
@@ -224,7 +231,7 @@ class Player(IHasPos):
 			self._wheel1_b.angular_velocity = 30
 			self._wheel2_b.angular_velocity = 30
 
-	def update(self, level_size: Vec2):
+	def update(self, level_size: Vec2, camera: Camera):
 		# if self._chassi_b.velocity.x <= 0.0:
 		# 	self._alive = False
 		if self._chassi_b.position.y > level_size.y:
@@ -232,6 +239,15 @@ class Player(IHasPos):
 		
 		if self._alive and self._chassi_b.position.x > level_size.x:
 			self._won = True
+
+		# update relative position
+		a = 0.2
+		b = 0.3
+		c = 0.1
+		x = -self._chassi_b.velocity.x
+		relative_x = (1-(a+b))/(1+math.exp(-x * c))+a
+		relative_y = camera.get_relative_position().y
+		camera.set_relative_position(Vec2(relative_x, relative_y))
 	
 	def _push_right(self):
 		return
@@ -250,14 +266,15 @@ class Player(IHasPos):
 	def get_pos(self) -> Vec2:
 		return Vec2(self._chassi_b.position.x, self._chassi_b.position.y)
 				
-	def _calc_thrust_power(self, direction: int) -> float:
+	def _calc_thrust_up_force(self) -> tuple[float, float]:
 		# https://www.geogebra.org/calculator/vtr4t243
-		x = self._chassi_b.velocity.y / GLOBAL_SCALE
+		x = self._chassi_b.velocity.y
 		decay = self._player_data.thrust_decay
-		thrust = self._player_data.thrust
+		thrust = self._player_data.thrust_up * self.get_mass()
 		if x < 0.0:
-			return thrust * math.exp(x * direction * decay)
+			return 0, -thrust * math.exp(x * decay)
 		else:
-			return thrust
-			a = -x * decay * direction
-			return thrust * math.log(a**2 - a + 1) + 1
+			return 0, -thrust
+
+	def _calc_thrust_down_force(self) -> tuple[float, float]:
+		return 0, self._player_data.thrust_down * self.get_mass()

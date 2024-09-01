@@ -68,6 +68,12 @@ class FlexContainer(IContainer):
 		self._width = width
 		self._height = height
 
+	def set_min_width(self, width: float) -> None:
+		self._width = width
+	
+	def set_min_height(self, height: float) -> None:
+		self._height = height
+
 	def get_min_size(self) -> tuple[float, float]:
 		return self._width, self._height
 

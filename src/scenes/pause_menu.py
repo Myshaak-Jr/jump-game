@@ -2,8 +2,8 @@ from typing import override
 from core import IScene, app_state
 import pygame
 from gui import Container, LabelElement, Style, ButtonModifier, OffsetModifier, HSeparatorElement
-from gui.containers.flex_container import Direction, FlexContainer
-from styles import HEADER_STYLE, BUTTON_STYLE, BUTTON_STYLE_HOVERED, BUTTON_STYLE_PRESSED, COLOR_WHITE
+from gui.containers.flex_container import *
+from styles import *
 import util.language_manager as lm
 from .level import LevelScene
 
@@ -17,24 +17,40 @@ class PauseMenuScene(IScene):
 			FlexContainer(app_state.get_width(), direction=Direction.COLUMN, gap = 25, top = app_state.get_height() // 4).with_children(
 				LabelElement(lm.get("gui.label.pause"), style=HEADER_STYLE),
 				OffsetModifier(HSeparatorElement(app_state.get_width() // 2, color=COLOR_WHITE), 0, -15),
-				FlexContainer(app_state.get_height() // 20, gap = 25).with_children(
+				FlexContainer(app_state.get_width(), gap=45, justify=Justification.CENTER).with_children(
 					ButtonModifier(
-						LabelElement(lm.get("gui.button.continue")),
+						button_continue := FlexContainer(justify=Justification.CENTER).with_children(
+							LabelElement(lm.get("gui.button.continue")),
+						),
 						on_click=lambda: app_state.queue_scene(self.last_level),
 						style=BUTTON_STYLE,
 						style_hovered=BUTTON_STYLE_HOVERED,
 						style_pressed=BUTTON_STYLE_PRESSED
 					),
 					ButtonModifier(
-						LabelElement(lm.get("gui.button.main_menu")),
+						button_main_menu := FlexContainer(justify=Justification.CENTER).with_children(
+							LabelElement(lm.get("gui.button.main_menu")),
+						),
 						on_click=lambda: app_state.queue_scene("main_menu"),
 						style=BUTTON_STYLE,
 						style_hovered=BUTTON_STYLE_HOVERED,
 						style_pressed=BUTTON_STYLE_PRESSED
 					)
+				),
+				ButtonModifier(
+					LabelElement(lm.get("gui.button.restart")),
+					on_click=lambda: app_state.queue_scene("level", self.last_level.get_planet()),
+					style=BUTTON_STYLE,
+					style_hovered=BUTTON_STYLE_HOVERED,
+					style_pressed=BUTTON_STYLE_PRESSED
 				)
 			)
 		)
+
+		# set the button size to the same size
+		bigger_button = max(button_continue.get_children()[0].get_size()[0], button_main_menu.get_children()[0].get_size()[0])
+		for button in [button_continue, button_main_menu]:
+			button.set_min_width(bigger_button)
 
 		pygame.display.set_caption(lm.get("general.title"))
 

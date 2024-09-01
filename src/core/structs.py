@@ -32,7 +32,8 @@ class PlanetData:
 
 @dataclass
 class PlayerData:
-	thrust: float
+	thrust_up: float
+	thrust_down: float
 	thrust_decay: float
 
 

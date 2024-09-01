@@ -5,6 +5,12 @@ COLOR_WHITE = (255, 255, 255)
 COLOR_BLACK = (0, 0, 0)
 COLOR_RED = (255, 0, 0)
 
+DEBUG_STYLE = Style(
+	border_color=COLOR_RED,
+	border_width=1,
+	border_opacity=1
+)
+
 
 HEADER_STYLE = Style(
 	text_color=COLOR_WHITE,

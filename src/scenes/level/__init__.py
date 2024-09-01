@@ -4,11 +4,8 @@ from typing import override
 from core import IScene, app_state, PlanetData
 import pygame
 from gui import Container, Style
-from gui.containers.flex_container import Alignment, Direction, FlexContainer, Justification
 from gui.elements.label_element import LabelElement
-from gui.elements.slider_element import SliderElement
 from scenes.level.background import Background
-from scenes.level.util import GLOBAL_SCALE
 from styles import SMALL_LABEL_STYLE
 import util.language_manager as lm
 from util.my_math import IVec2, Vec2
@@ -22,24 +19,7 @@ __all__ = [
 	"LevelScene",
 ]
 
-
-SLIDER_STYLE = Style(
-	slider_track_color=(200, 200, 200),
-	slider_handle_color=(100, 100, 100),
-	slider_handle_border_color=(255, 255, 255)
-)
-
-SLIDER_STYLE_HOVERED = Style(
-	slider_handle_color=(120, 120, 120),
-)
-
-SLIDER_STYLE_PRESSED = Style(
-	slider_handle_color=(160, 160, 160),
-)
-
-
-SLIDER_THRUST_TEXT = "Thrust: {:.3f}"
-SLIDER_THRUST_DECAY_TEXT = "Thrust Decay: {:.3f}"
+TILE_SIZE = 4
 
 SRC_RECTS: list[tuple[int, tuple[int, int, int, int]]] = [
 	(-18, (192, 302, 64, 88)),
@@ -89,14 +69,22 @@ class LevelScene(IScene):
 		self._level_size = Vec2(0, 0)
 		self._load_level()
 
+		self._add_left_wall()
+
 		# Setup the player
 		self._player_data = app_state.get_player_data()
 
-		self._player = Player(self._space, 3 * GLOBAL_SCALE, 2.0 * GLOBAL_SCALE, 2.0 * GLOBAL_SCALE, self._planet, self._player_data)
+		self._player = Player(
+			self._space,
+			3 * TILE_SIZE,
+			self._calc_start_y(),
+			self._planet,
+			self._player_data
+		)
 
-		# Setup the camera and player
-		self._camera = Camera(int(40 * (app_state.get_width() / 1920)), 20.0)
-		self._camera.follow_object(self._player, Vec2(0.2, 0.6))
+		# Setup the camera
+		self._camera = Camera(int(40 * (app_state.get_width() / 1920)), 17.0)
+		self._camera.follow_object(self._player, Vec2(0.5, 0.6))
 
 		# Setup the background
 		self._background = Background(self._planet, lambda x: x)
@@ -112,10 +100,11 @@ class LevelScene(IScene):
 		self._player.physics_update()
 
 		self._space.step(dt)
-		self._player.update(self._level_size)
+		self._player.update(self._level_size, self._camera)
 
 		for tile in self._tile_colliders:
 			tile.update()
+		
 		self._camera.update(dt, self._level_size)
 
 	def render_game_content(self, screen: pygame.Surface) -> None:
@@ -175,15 +164,12 @@ class LevelScene(IScene):
 		pygame.mouse.set_visible(True)
 		self._gui.on_scene_exit()
 
-	def _calc_start_pos(self) -> Vec2:
-		return Vec2(0.5 * GLOBAL_SCALE, self._calc_start_y())
-
 	def _calc_start_y(self) -> float:
 		for y in range(self._level.height):
 			if y == 0 or self._level.level_data[y-1][0] == "#":
 				continue
 			if self._level.level_data[y][0] == "#":
-				return y * GLOBAL_SCALE
+				return (y - 1) * TILE_SIZE
 		raise ValueError("Invalid level data")
 
 	def _add_tile_collider(self, x: int, y: int, width: int = 1, height: int = 1) -> None:
@@ -191,7 +177,7 @@ class LevelScene(IScene):
 			height += 50
 			y -= 50
 			 
-		tile = TileCollider(self._space, x * GLOBAL_SCALE, y * GLOBAL_SCALE, width * GLOBAL_SCALE, height * GLOBAL_SCALE)
+		tile = TileCollider(self._space, x * TILE_SIZE, y * TILE_SIZE, width * TILE_SIZE, height * TILE_SIZE)
 		self._tile_colliders.append(tile)
 
 	def _add_tile_sprite(self, x: int, y: int, adjacency_id: int) -> None:
@@ -200,10 +186,10 @@ class LevelScene(IScene):
 		y_offset /= 64
 
 		self._tile_sprites.append(TileSprite(
-			x * GLOBAL_SCALE,
-			(y + y_offset) * GLOBAL_SCALE,
-			GLOBAL_SCALE,
-			GLOBAL_SCALE,
+			x * TILE_SIZE,
+			(y + y_offset) * TILE_SIZE,
+			TILE_SIZE,
+			TILE_SIZE,
 			f"assets/image/tilesets/{self._planet.name}.png",
 			src_rect=pygame.Rect(src_rect)
 		))
@@ -225,7 +211,7 @@ class LevelScene(IScene):
 		return self._level.level_data[pos.y][pos.x + 1] != "#"
 
 	def _load_level(self) -> None:
-		self._level_size = Vec2(self._level.width * GLOBAL_SCALE, self._level.height * GLOBAL_SCALE)
+		self._level_size = Vec2(self._level.width * TILE_SIZE, self._level.height * TILE_SIZE)
 
 
 		# Group the colliders
@@ -288,6 +274,10 @@ class LevelScene(IScene):
 			
 					self._add_tile_sprite(x, y, adjacency_id)
 		
+	def _add_left_wall(self) -> None:
+		self._add_tile_collider(-1, 0, 1, self._level.height)
+
+
 	def _setup_gui(self) -> None:		
 		self._gui = Container(app_state.get_width(), app_state.get_height())#.with_children(
 			# ButtonModifier(
@@ -303,53 +293,3 @@ class LevelScene(IScene):
 		if app_state.show_fps():
 			self._fps_counter = LabelElement("FPS: 0", style=SMALL_LABEL_STYLE.updated(Style(text_color=(255, 0, 0))), right=20, bottom=20)
 			self._gui.add_child(self._fps_counter)
-
-		if app_state.is_thrust_debug():
-			self._thrust_label = LabelElement(SLIDER_THRUST_TEXT.format(self._player_data.thrust), style=SMALL_LABEL_STYLE)
-			self._thrust_label_decay = LabelElement(SLIDER_THRUST_TEXT.format(self._player_data.thrust_decay), style=SMALL_LABEL_STYLE)
-	
-			self._gui.add_child(
-				FlexContainer(
-					app_state.get_width() / 2,
-					direction=Direction.COLUMN,
-					align=Alignment.END,
-					gap=25,
-					right=30,
-					top=60,
-				).with_children(
-					FlexContainer(app_state.get_width() * 0.4, justify=Justification.SPACE_BETWEEN).with_children(
-						self._thrust_label,
-						SliderElement(
-							width=150.0,
-							min_value=10.0,
-							max_value=100.0,
-							default=self._player_data.thrust,
-							on_changed=self._update_player_thrust,
-							style=SLIDER_STYLE,
-							style_hovered=SLIDER_STYLE_HOVERED,
-							style_held=SLIDER_STYLE_PRESSED
-						),
-					),
-					FlexContainer(app_state.get_width() * 0.4, justify=Justification.SPACE_BETWEEN).with_children(
-						self._thrust_label_decay,
-						SliderElement(
-							width=150.0,
-							min_value=0.0,
-							max_value=1.0,
-							default=self._player_data.thrust_decay,
-							on_changed=self._update_player_thrust_decay,
-							style=SLIDER_STYLE,
-							style_hovered=SLIDER_STYLE_HOVERED,
-							style_held=SLIDER_STYLE_PRESSED
-						)
-					)
-				)
-			)
-
-	def _update_player_thrust(self, value: float) -> None:
-		self._player_data.thrust = value
-		self._thrust_label.set_text(SLIDER_THRUST_TEXT.format(value))
-
-	def _update_player_thrust_decay(self, value: float) -> None:
-		self._player_data.thrust_decay = value
-		self._thrust_label_decay.set_text(SLIDER_THRUST_DECAY_TEXT.format(value))
