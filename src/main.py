@@ -7,6 +7,16 @@ from scenes.level.physics_test import PhysicsTestScene
 import util.logger as log
 
 
+"""
+TODO: Add music and sounds
+TODO: Add settings menu
+TODO: Add more levels
+TODO: Add level select menu
+TODO: Fix wrong clipping of the tiles
+TODO: Add gui caching
+"""
+
+
 def main() -> int:
 	app = None
 
