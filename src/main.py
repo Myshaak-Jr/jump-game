@@ -8,6 +8,7 @@ import util.logger as log
 
 
 """
+TODO: Add fuel bar
 TODO: Add music and sounds
 TODO: Add settings menu
 TODO: Add more levels
