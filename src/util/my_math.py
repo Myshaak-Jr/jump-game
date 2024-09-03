@@ -6,6 +6,7 @@ import math
 
 
 __all__ = [
+	"exponensial_logarithmic_function",
 	"Vec2",
 	"sign",
 	"clamp",
@@ -17,6 +18,15 @@ __all__ = [
 
 
 EPSILON = 1e-6
+
+
+def exponensial_logarithmic_function(value: float) -> float:
+	if value < 0:
+		return math.exp(value)
+	return math.log((value + 1) * value + 1) + 1
+
+def linear_tanh_diff(value: float, asymptote_offset: float, steepness: float = 1.0) -> float:
+	return steepness * value - asymptote_offset * math.tanh(value / asymptote_offset)
 
 
 @dataclass(frozen=True, init=False)

@@ -1,8 +1,8 @@
 {
 	"player": {
-		"thrust_up": 2500,
-		"thrust_down": 300,
-		"thrust_decay": 0.3
+		"thrust_up": 1000,
+		"thrust_down": 250,
+		"thrust_decay": 0.1
 	},
 	"planets": [
 		{
