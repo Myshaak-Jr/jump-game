@@ -97,7 +97,7 @@ class LevelScene(IScene):
 		return self._planet
 	
 	def update_game_content(self, dt: float) -> None:
-		self._player.physics_update()
+		self._player.physics_update(dt)
 
 		self._space.step(dt)
 		self._player.update(self._level_size, self._camera)
@@ -147,6 +147,8 @@ class LevelScene(IScene):
 		screen.fill((0, 0, 0))
 
 		self.render_game_content(screen)
+
+		self._player.render_fuel_bar(screen)
 
 		self._gui.render(screen)
 

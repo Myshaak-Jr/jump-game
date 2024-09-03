@@ -1,13 +1,13 @@
 import os
-from typing import override
+from typing import Any, override
 import pygame
 import pymunk
 import pymunk.space
 from util.my_math import Vec2, exponensial_logarithmic_function
 from .camera import Camera
-from core import PlanetData, PlayerData
+from core import PlanetData, PlayerData, app_state
 import math
-from .util import IHasPos
+from .util import CollisionType, IHasPos
 from random import choice
 import util.asset_manager as am
 
@@ -25,11 +25,18 @@ class Player(IHasPos):
 		self._alive = True
 		self._won = False
 
+		# Fuel
+		self._MAX_FUEL = 8
+		self._fuel = self._MAX_FUEL
+
 		# Load the player sprites
 		self._load_sprites()
 		
 		# Pymunk representation
 		self._load_body(space, x, y)
+
+		handler = space.add_collision_handler(CollisionType.PLAYER.value, CollisionType.GROUND.value)
+		handler.post_solve = self._hit_ground
 
 		# Apply a force to the right
 		self._push_right()
@@ -38,6 +45,11 @@ class Player(IHasPos):
 		self._last_zoom = 0
 		self._car_cache: pygame.Surface | None = None
 		self._wheel_cache: pygame.Surface | None = None
+
+	def _hit_ground(self, arbiter: pymunk.Arbiter, space: pymunk.Space, data: dict[str, Any]) -> bool:
+		if arbiter.normal.y > 0.8:
+			self._fuel = self._MAX_FUEL
+		return True
 
 	def _load_body(self, space: pymunk.Space, x: float, y: float):
 		self._SCALE = 1 / 100 * 6
@@ -64,8 +76,9 @@ class Player(IHasPos):
 		))
 		self._chassi_b = pymunk.Body(mass, moment)
 		self._chassi_s = pymunk.Poly.create_box(self._chassi_b, (self._CHASSI_WIDTH, self._CHASSI_HEIGHT))
-		self._chassi_s.friction = 0.0
+		self._chassi_s.friction = 0.7
 		self._chassi_b.center_of_gravity = (0, self._CHASSI_HEIGHT * 0.6)
+		self._chassi_s.collision_type = CollisionType.PLAYER.value
 		space.add(self._chassi_b, self._chassi_s)
 
 		mass = 2
@@ -73,13 +86,14 @@ class Player(IHasPos):
 		self._wheel1_b = pymunk.Body(mass, 2)
 		self._wheel1_s = pymunk.Circle(self._wheel1_b, self._WHEEL_RADIUS)
 		self._wheel1_s.friction = 1.5
+		self._wheel1_s.collision_type = CollisionType.PLAYER.value
 		space.add(self._wheel1_b, self._wheel1_s)
 
 		self._wheel2_b = pymunk.Body(mass, moment)
 		self._wheel2_s = pymunk.Circle(self._wheel2_b, self._WHEEL_RADIUS)
 		self._wheel2_s.friction = 1.5
+		self._wheel2_s.collision_type = CollisionType.PLAYER.value
 		space.add(self._wheel2_b, self._wheel2_s)
-
 
 		mass = 0.1
 		moment = pymunk.moment_for_segment(mass, self._AXLE1_P1, self._AXLE1_P2, self._AXLE_RADIUS)
@@ -130,6 +144,34 @@ class Player(IHasPos):
 		self._wheel = am.get_image(f"assets/image/player/wheels/{wheel}")
 
 	def render(self, screen: pygame.Surface, camera: Camera):
+		# Draw the axles
+		axle1_p1 = camera.apply_pos(Vec2(self._axle1_b.local_to_world(self._AXLE1_P1)))
+		axle1_p2 = camera.apply_pos(
+			Vec2(
+				self._chassi_b.local_to_world(
+					(
+						-self._CHASSI_WIDTH / 2 + self._AXLE_RADIUS,
+						self._CHASSI_HEIGHT / 2 - self._AXLE_RADIUS
+					)
+				)
+			)
+		)
+		axle2_p1 = camera.apply_pos(
+			Vec2(
+				self._chassi_b.local_to_world(
+					(
+						self._CHASSI_WIDTH / 2 - self._AXLE_RADIUS,
+						self._CHASSI_HEIGHT / 2 - self._AXLE_RADIUS
+					)
+				)
+			)
+		)
+		axle2_p2 = camera.apply_pos(Vec2(self._axle2_b.local_to_world(self._AXLE2_P2)))
+		axle_width = camera.get_zoom() * self._AXLE_RADIUS * 2
+
+		pygame.draw.line(screen, "#D4D7D9", axle1_p1.to_tuple(), axle1_p2.to_tuple(), int(axle_width))
+		pygame.draw.line(screen, "#D4D7D9", axle2_p1.to_tuple(), axle2_p2.to_tuple(), int(axle_width))
+
 		# Draw the chassi
 
 		if self._last_zoom != camera.get_zoom() or self._car_cache is None:
@@ -157,16 +199,6 @@ class Player(IHasPos):
 		# # Draw the center of gravity
 		# cog = camera.apply_pos(Vec2(self._chassi_b.local_to_world(self._chassi_b.center_of_gravity)))
 		# pygame.draw.circle(screen, (0, 0, 255), cog.to_tuple(), 3)
-
-		# Draw the axles
-		axle1_p1 = camera.apply_pos(Vec2(self._axle1_b.local_to_world(self._AXLE1_P1)))
-		axle1_p2 = camera.apply_pos(Vec2(self._axle1_b.local_to_world(self._AXLE1_P2)))
-		axle2_p1 = camera.apply_pos(Vec2(self._axle2_b.local_to_world(self._AXLE2_P1)))
-		axle2_p2 = camera.apply_pos(Vec2(self._axle2_b.local_to_world(self._AXLE2_P2)))
-		axle_width = camera.get_zoom() * self._AXLE_RADIUS * 2
-
-		pygame.draw.line(screen, "#D4D7D9", axle1_p1.to_tuple(), axle1_p2.to_tuple(), int(axle_width))
-		pygame.draw.line(screen, "#D4D7D9", axle2_p1.to_tuple(), axle2_p2.to_tuple(), int(axle_width))
 
 		# Draw the wheels
 		wheel_radius = int(camera.get_zoom() * (self._WHEEL_RADIUS * 1.1)) # 1.1 because the wheel image is a bit smaller than the actual wheel
@@ -201,6 +233,17 @@ class Player(IHasPos):
 
 		# pygame.draw.line(screen, (255, 0, 0), left_point_screen.to_tuple(), force_left_screen.to_tuple(), 2)
 		# pygame.draw.line(screen, (255, 0, 0), right_point_screen.to_tuple(), force_right_screen.to_tuple(), 2)
+
+	def render_fuel_bar(self, screen: pygame.Surface):
+		x = 10
+		y = 10
+		width = app_state.get_width() / 4
+		height = 20
+
+		pygame.draw.rect(screen, (0, 0, 0), (x-3, y-3, width+6, height+6))
+
+		fuel_width = width * self._fuel / self._MAX_FUEL
+		pygame.draw.rect(screen, (0, 255, 0), (x, y, fuel_width, height))
 
 	def set_pos(self, pos: Vec2):
 		new_pos = pymunk.Vec2d(pos.x, pos.y)
@@ -243,19 +286,31 @@ class Player(IHasPos):
 
 		return left_point, right_point, force_left, force_right
 
-	def physics_update(self):
+	def physics_update(self, dt: float):
 		if not self._alive: return
 		if self._chassi_b.velocity.x < self._planet.game_speed:
 			self._push_right()
 
 		key_state = pygame.key.get_pressed()
-		if key_state[pygame.K_SPACE]:
+		if key_state[pygame.K_SPACE] and self._fuel > 0:
 			left_point, right_point, force_left, force_right = self._get_force_points()
 			self._chassi_b.apply_force_at_world_point(force_left, left_point)
 			self._chassi_b.apply_force_at_world_point(force_right, right_point)
-		 
-		elif key_state[pygame.K_LSHIFT]:
-			self._chassi_b.apply_force_at_world_point(self._calc_thrust_down_force(), self._chassi_b.position)
+
+			if self._chassi_b.velocity.y < 0.0:
+				self._fuel -= math.exp(-self._chassi_b.velocity.y * self._player_data.thrust_decay) * dt
+			else:
+				self._fuel -= dt
+			self._fuel = max(0, self._fuel)
+
+		elif key_state[pygame.K_LSHIFT] and self._fuel > 0:
+			point = pymunk.Vec2d(0, self._CHASSI_HEIGHT).rotated(self._chassi_b.angle) + self._chassi_b.position
+
+			thrust = self._player_data.thrust_down * self.get_mass()
+			self._chassi_b.apply_force_at_world_point(pymunk.Vec2d(0, thrust), point)
+
+			self._fuel -= dt
+			self._fuel = max(0, self._fuel)
 		
 		if key_state[pygame.K_a]:
 			self._wheel1_b.angular_velocity = -30
@@ -306,12 +361,8 @@ class Player(IHasPos):
 	def _calc_thrust_up_force(self) -> float:
 		# https://www.geogebra.org/calculator/vtr4t243
 		x = self._chassi_b.velocity.y
-		decay = self._player_data.thrust_decay
 		thrust = self._player_data.thrust_up * self.get_mass()
 		if x < 0.0:
-			return -thrust * math.exp(x * decay)
+			return -thrust * math.exp(x * self._player_data.thrust_decay)
 		else:
 			return -thrust
-
-	def _calc_thrust_down_force(self) -> tuple[float, float]:
-		return 0, self._player_data.thrust_down * self.get_mass()

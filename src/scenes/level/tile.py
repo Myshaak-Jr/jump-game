@@ -2,7 +2,7 @@ from typing import override
 import pygame
 import pymunk
 from .camera import Camera
-from .util import IHasRect
+from .util import CollisionType, IHasRect
 import util.asset_manager as am
 
 
@@ -67,6 +67,7 @@ class TileCollider(IHasRect):
 		self._shape.density = 1
 		self._shape.elasticity = 0.5
 		self._shape.friction = 0.5  # You can adjust friction or other properties here
+		self._shape.collision_type = CollisionType.GROUND.value
 		
 		# Add the shape to the space
 		space.add(self._body, self._shape)

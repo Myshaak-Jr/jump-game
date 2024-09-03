@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import override
 import pygame
 
@@ -23,3 +24,7 @@ class IHasRect(IHasPos):
 	def get_pos(self) -> Vec2:
 		rect = self.get_rect()
 		return Vec2(rect.center)
+
+class CollisionType(Enum):
+	GROUND = 1 << 0
+	PLAYER = 1 << 1
