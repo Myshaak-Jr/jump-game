@@ -26,7 +26,7 @@ class Player(IHasPos):
 		self._won = False
 
 		# Fuel
-		self._MAX_FUEL = 8
+		self._MAX_FUEL = 30
 		self._fuel = self._MAX_FUEL
 
 		# Load the player sprites
@@ -335,7 +335,7 @@ class Player(IHasPos):
 		# update relative position
 		a = 0.2
 		b = 0.3
-		c = 0.1
+		c = 0.05
 		x = -self._chassi_b.velocity.x
 		relative_x = (1-(a+b))/(1+math.exp(-x * c))+a
 		relative_y = camera.get_relative_position().y

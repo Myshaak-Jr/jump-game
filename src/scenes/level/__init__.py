@@ -83,7 +83,7 @@ class LevelScene(IScene):
 		)
 
 		# Setup the camera
-		self._camera = Camera(int(40 * (app_state.get_width() / 1920)), 17.0)
+		self._camera = Camera(int(20 * (app_state.get_width() / 1920)), 10.0)
 		self._camera.follow_object(self._player, Vec2(0.5, 0.6))
 
 		# Setup the background
