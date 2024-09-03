@@ -7,7 +7,7 @@ import util.logger as log
 
 
 """
-TODO: Add fuel bar
+TODO: Fix the background not being drawn at the correct position
 TODO: Add music and sounds
 TODO: Add settings menu
 TODO: Add more levels
