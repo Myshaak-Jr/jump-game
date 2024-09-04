@@ -9,7 +9,7 @@ import util.logger as log
 """
 TODO: Fix the background not being drawn at the correct position
 TODO: Add music and sounds
-TODO: Add settings menuaaa
+TODO: Add settings menu
 TODO: Add more levels
 TODO: Add level select menu
 TODO: Fix wrong clipping of the tiles
