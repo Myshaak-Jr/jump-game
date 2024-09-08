@@ -9,31 +9,36 @@
 			"name": "luminis",
 			"gravity": 0.7,
 			"drag": 0.1,
-			"game_speed": 5.0
+			"game_speed": 100,
+			"game_acceleration": 100
 		},
 		{
 			"name": "selvian",
 			"gravity": 1.2,
 			"drag": 0.1,
-			"game_speed": 5.0
+			"game_speed": 5.0,
+			"game_acceleration": 100
 		},
 		{
 			"name": "sulius",
 			"gravity": 50,
 			"drag": 0.1,
-			"game_speed": 5.0
+			"game_speed": 35,
+			"game_acceleration": 40
 		},
 		{
 			"name": "nyxana",
 			"gravity": 0.3,
 			"drag": 0.1,
-			"game_speed": 5.0
+			"game_speed": 500,
+			"game_acceleration": 100
 		},
 		{
 			"name": "acreus",
 			"gravity": 1.6,
 			"drag": 0.1,
-			"game_speed": 5.0
+			"game_speed": 5.0,
+			"game_acceleration": 100
 		}
 	]
 }

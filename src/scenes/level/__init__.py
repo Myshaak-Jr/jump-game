@@ -54,7 +54,8 @@ class LevelScene(IScene):
 
 		# Setup the space
 		self._space = pymunk.Space()
-		self._space.gravity = 0, self._planet.gravity
+		# self._space.gravity = 0, self._planet.gravity
+		self._space.gravity = 0, 0
 		self._space.damping = 0.99
 
 		# Setup the planet and level

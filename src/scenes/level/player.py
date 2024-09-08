@@ -47,8 +47,10 @@ class Player(IHasPos):
 		handler.begin = self._hit_ground
 		handler.separate = self._separate_ground
 
-		# Apply a force to the right
-		self._push_right()
+		self.point_left: Vec2 | None = None
+		self.point_right: Vec2 | None = None
+		self.force_left: Vec2 | None = None
+		self.force_right: Vec2 | None = None
 
 		# Cache for the car sprite
 		self._last_zoom = 0
@@ -244,6 +246,12 @@ class Player(IHasPos):
 		
 		screen.blit(right_wheel_sprite, (right_wheel_x, right_wheel_y))
 
+		if self.point_left is not None and self.force_left is not None:
+			pygame.draw.line(screen, (0, 255, 0), camera.apply_pos(self.point_left).to_tuple(), camera.apply_pos(self.point_left + self.force_left).to_tuple(), 5)
+
+		if self.point_right is not None and self.force_right is not None:
+			pygame.draw.line(screen, (0, 255, 0), camera.apply_pos(self.point_right).to_tuple(), camera.apply_pos(self.point_right + self.force_right).to_tuple(), 5)
+
 	def render_fuel_bar(self, screen: pygame.Surface):
 		x = 10
 		y = 10
@@ -273,27 +281,6 @@ class Player(IHasPos):
 	def get_mass(self) -> float:
 		return self._chassi_b.mass + self.left_wheel_b.mass + self._right_wheel_b.mass + self._left_axle_b.mass + self._right_axle_b.mass
 
-	def _get_force_points(self, force_strength: float) -> tuple[pymunk.Vec2d, pymunk.Vec2d, pymunk.Vec2d, pymunk.Vec2d]:
-		a = 0.1
-		c = 0.7
-		d = 0.2
-
-		x_offset = self._chassi_width / 2
-		y_offset = 0
-
-		left_point = pymunk.Vec2d(-x_offset, y_offset).rotated(self._chassi_b.angle) + self._chassi_b.position
-		right_point = pymunk.Vec2d(x_offset, y_offset).rotated(self._chassi_b.angle) + self._chassi_b.position
-
-		angle_mult_left = (1 - math.sin(self._chassi_b.angle)) / 2
-		speed_mult_left = c*exponensial_logarithmic_function(-a*self._chassi_b.angular_velocity) + d
-		force_left = pymunk.Vec2d(0, force_strength) * angle_mult_left * speed_mult_left
-
-		angle_mult_right = (1 + math.sin(self._chassi_b.angle)) / 2
-		speed_mult_right = c*exponensial_logarithmic_function(a*self._chassi_b.angular_velocity) + d
-		force_right = pymunk.Vec2d(0, force_strength) * angle_mult_right * speed_mult_right
-
-		return left_point, right_point, force_left, force_right
-
 	def physics_update(self, dt: float):
 		if not self._alive: return
 
@@ -304,31 +291,81 @@ class Player(IHasPos):
 
 		# Handle the input
 		key_state = pygame.key.get_pressed()
-		if key_state[pygame.K_SPACE] and self._fuel > 0:
-			force = self._calc_thrust_up_force()
-			left_point, right_point, force_left, force_right = self._get_force_points(force)
-			self._chassi_b.apply_force_at_world_point(force_left, left_point)
-			self._chassi_b.apply_force_at_world_point(force_right, right_point)
+		# if key_state[pygame.K_SPACE] and self._fuel > 0:
+		# 	force = self._calc_thrust_up_force()
+		# 	point = pymunk.Vec2d(0, -self._chassi_height).rotated(self._chassi_b.angle) + self._chassi_b.position
+		# 	self._chassi_b.apply_force_at_world_point(pymunk.Vec2d(0, force), point)
 
-			self._fuel += force / (self._player_data.thrust_up * self.get_mass())
-			self._fuel = max(self._fuel, 0)
+		# elif key_state[pygame.K_LSHIFT] and self._fuel > 0:
+		# 	force = self._player_data.thrust_down * self.get_mass()
+		# 	point = pymunk.Vec2d(0, self._chassi_height).rotated(self._chassi_b.angle) + self._chassi_b.position
+		# 	self._chassi_b.apply_force_at_world_point(pymunk.Vec2d(0, force), point)
 
-		elif key_state[pygame.K_LSHIFT] and self._fuel > 0:
-			force = self._player_data.thrust_down * self.get_mass()
-			point = pymunk.Vec2d(0, self._chassi_height).rotated(self._chassi_b.angle) + self._chassi_b.position
-			self._chassi_b.apply_force_at_world_point(pymunk.Vec2d(0, force), point)
+		# 	self._fuel -= force / (self._player_data.thrust_up * self.get_mass())
+		# 	self._fuel = max(self._fuel, 0)
 
-			self._fuel -= force / (self._player_data.thrust_up * self.get_mass())
-			self._fuel = max(self._fuel, 0)
-		
+		# if self._chassi_b.velocity.x < self._planet.game_speed:
+		# 	point = self._chassi_b.local_to_world(self._chassi_b.center_of_gravity)
+		# 	force = pymunk.Vec2d(self._planet.game_acceleration, 0) * self.get_mass()
+		# 	self._chassi_b.apply_force_at_world_point(force, point)
+
 		if key_state[pygame.K_a]:
-			self.left_wheel_b.angular_velocity = -self._wheel_speed
-			self._right_wheel_b.angular_velocity = -self._wheel_speed
+			self._chassi_b.position -= Vec2(20 * dt, 0)
+		if key_state[pygame.K_d]:
+			self._chassi_b.position += Vec2(20 * dt, 0)
+		if key_state[pygame.K_w]:
+			self._chassi_b.position -= Vec2(0, 20 * dt)
+		if key_state[pygame.K_s]:
+			self._chassi_b.position += Vec2(0, 20 * dt)
 
-		elif key_state[pygame.K_d]:
-			self.left_wheel_b.angular_velocity = self._wheel_speed
-			self._right_wheel_b.angular_velocity = self._wheel_speed
-		
+		self._chassi_b.velocity = 0, 0
+
+		if key_state[pygame.K_q]:
+			self._chassi_b.angle += 0.1
+		if key_state[pygame.K_e]:
+			self._chassi_b.angle -= 0.1
+		if key_state[pygame.K_SPACE]:
+			self._settle_angle()
+		else:
+			self._chassi_b.angular_velocity = 0
+			self.point_left = None
+			self.point_right = None
+			self.force_left = None
+			self.force_right = None
+			self.direction = 0
+
+	def _settle_angle(self):
+		angle = self._chassi_b.angle % (2 * math.pi)
+
+		if angle > math.pi:
+			angle -= 2 * math.pi
+
+		print(angle)
+
+		#if abs(angle) < 0.1: return
+		a = 0.1
+		c = 0.7
+		d = 0.2
+
+		angle_mult = math.sin(abs(angle / 2))
+		speed_mult = 1 # c*exponensial_logarithmic_function(-a*abs(self._chassi_b.angular_velocity)) + d
+
+		direction = 1 if angle > 0 else -1
+		force_strength = 300 * angle_mult * speed_mult * direction
+
+		x_offset = self._chassi_width / 2
+
+		left_point = self._chassi_b.center_of_gravity + pymunk.Vec2d(-x_offset, 0)
+		right_point = self._chassi_b.center_of_gravity + pymunk.Vec2d(x_offset, 0)
+
+		self._chassi_b.apply_force_at_local_point(pymunk.Vec2d(0, force_strength), left_point)
+		self._chassi_b.apply_force_at_local_point(pymunk.Vec2d(0, -force_strength), right_point)
+
+		self.point_left = Vec2(left_point).rotated(self._chassi_b.angle) + self._chassi_b.position
+		self.point_right = Vec2(right_point).rotated(self._chassi_b.angle) + self._chassi_b.position
+		self.force_left = Vec2(0, force_strength).rotated(self._chassi_b.angle)
+		self.force_right = Vec2(0, -force_strength).rotated(self._chassi_b.angle)
+
 	def update(self, level_size: Vec2, camera: Camera):
 		# cap the angular velocity
 		self._chassi_b.angular_velocity = max(min(self._chassi_b.angular_velocity, 10), -10)
@@ -349,14 +386,7 @@ class Player(IHasPos):
 		relative_x = (1-(a+b))/(1+math.exp(-x * c))+a
 		relative_y = camera.get_relative_position().y
 		camera.set_relative_position(Vec2(relative_x, relative_y))
-	
-	def _push_right(self):
-		return
-		force = Vec2(10, 0) * self._chassi_b.mass
-		self._chassi_b.apply_impulse_at_world_point(force.to_tuple(), self._chassi_b.position)
-
-		#self._body.velocity = self._planet.game_speed * GLOBAL_SCALE, self._body.velocity.y
-	
+		
 	def is_alive(self) -> bool:
 		return self._alive
 	

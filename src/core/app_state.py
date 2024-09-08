@@ -75,6 +75,7 @@ def _load_planet_data(game_data: dict[str, Any]) -> None:
 			gravity=planet["gravity"],
 			drag=planet["drag"],
 			game_speed=planet["game_speed"],
+			game_acceleration=planet["game_acceleration"],
 			sprite_path=f"assets/image/planets/{name}.png",
 			translation_key=f"planet.{name}.name"
 		))

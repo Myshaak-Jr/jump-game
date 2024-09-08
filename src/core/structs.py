@@ -25,6 +25,7 @@ class PlanetData:
 	gravity: float
 	drag: float
 	game_speed: float
+	game_acceleration: float
 	sprite_path: str
 	translation_key: str
 	levels: tuple[LevelData, ...] = ()

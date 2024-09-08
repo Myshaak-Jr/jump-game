@@ -80,6 +80,20 @@ class Vec2:
 	def __abs__(self) -> Vec2:
 		return Vec2(abs(self.x), abs(self.y))
 
+	def __len__(self) -> int:
+		return 2
+	
+	def __getitem__(self, index: int) -> float:
+		if index == 0:
+			return self.x
+		if index == 1:
+			return self.y
+		raise IndexError("Invalid index")
+
+	def __iter__(self):
+		yield self.x
+		yield self.y
+
 	def length(self) -> float:
 		return (self.x ** 2 + self.y ** 2) ** 0.5
 	
@@ -103,7 +117,7 @@ class Vec2:
 	def distance2(self, other: Vec2) -> float:
 		return (self - other).length2()
 
-	def rotate(self, angle: float) -> Vec2:
+	def rotated(self, angle: float) -> Vec2:
 		cos = math.cos(angle)
 		sin = math.sin(angle)
 		return Vec2(self.x * cos - self.y * sin, self.x * sin + self.y * cos)
@@ -166,6 +180,20 @@ class IVec2:
 	
 	def __abs__(self) -> IVec2:
 		return IVec2(abs(self.x), abs(self.y))
+	
+	def __len__(self) -> int:
+		return 2
+	
+	def __getitem__(self, index: int) -> int:
+		if index == 0:
+			return self.x
+		if index == 1:
+			return self.y
+		raise IndexError("Invalid index")
+	
+	def __iter__(self):
+		yield self.x
+		yield self.y
 
 	def length(self) -> float:
 		return (self.x ** 2 + self.y ** 2) ** 0.5
