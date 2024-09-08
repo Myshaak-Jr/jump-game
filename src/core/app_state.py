@@ -50,13 +50,12 @@ def _init() -> None:
 	if _initialized: return
 	_initialized = True
 
+	
+
+def _load_player_data() -> PlayerData:
 	with open("data/game_data.json", "r") as file:
 		game_data: dict[str, Any] = json.load(file)
-	
-	_load_planet_data(game_data)
-	_load_player_data(game_data)
 
-def _load_player_data(game_data: dict[str, Any]) -> None:
 	global _player_data
 	_player_data = PlayerData(
 		thrust_up=game_data["player"]["thrust_up"],
@@ -64,7 +63,12 @@ def _load_player_data(game_data: dict[str, Any]) -> None:
 		thrust_decay=game_data["player"]["thrust_decay"]
 	)
 
-def _load_planet_data(game_data: dict[str, Any]) -> None:
+	return _player_data
+
+def _load_planet_data() -> None:
+	with open("data/game_data.json", "r") as file:
+		game_data: dict[str, Any] = json.load(file)
+
 	global _planet_data
 
 	for id, planet in enumerate(game_data["planets"]):
@@ -210,11 +214,15 @@ def queue_stop() -> None:
 	_running = False
 
 def get_player_data() -> PlayerData:
-	if not _player_data:
-		raise ValueError("Player data not loaded")
+	global _player_data
+	if _player_data is None:
+		return _load_player_data()
+	
 	return _player_data
 
 def get_planet_data(id: int) -> PlanetData:
+	if not _planet_data:
+		_load_planet_data()
 	return _planet_data[id]
 
 def enable_thrust_debug() -> None:

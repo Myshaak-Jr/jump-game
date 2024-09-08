@@ -10,6 +10,7 @@ import math
 from .util import CollisionType, IHasPos
 from random import choice
 import util.asset_manager as am
+import util.logger as log
 
 
 __all__ = [
@@ -18,7 +19,7 @@ __all__ = [
 
 
 class Player(IHasPos):
-	def __init__(self, space: pymunk.Space, x: float, y: float, planet: PlanetData, player_data: PlayerData):
+	def __init__(self, space: pymunk.Space, x: float, y: float, planet: PlanetData, player_data: PlayerData, mass: float = 20):
 		self._planet = planet
 		self._player_data = player_data
 		self._color = (255, 0, 0)
@@ -41,7 +42,7 @@ class Player(IHasPos):
 		self._on_ground: dict[pymunk.Shape, bool] = {}
 
 		# Pymunk representation
-		self._load_body(space, x, y)
+		self._load_body(space, x, y, mass)
 
 		handler = space.add_collision_handler(CollisionType.PLAYER.value, CollisionType.GROUND.value)
 		handler.begin = self._hit_ground
@@ -69,7 +70,7 @@ class Player(IHasPos):
 	def is_on_ground(self) -> bool:
 		return any(self._on_ground.values())
 
-	def _load_body(self, space: pymunk.Space, x: float, y: float):
+	def _load_body(self, space: pymunk.Space, x: float, y: float, mass_base: float):
 		self._scale = 1 / 100 * 6
 
 		self._chassi_width = 80 * self._scale
@@ -90,7 +91,7 @@ class Player(IHasPos):
 		SPRING_STIFFNESS = 2000
 		SPRING_DAMPING = 20
 		
-		mass = 20
+		mass = mass_base
 		moment = pymunk.moment_for_box(mass, (
 			self._chassi_width + abs(self._left_axle_tangent.x) * self._axle_lenght + abs(self._right_axle_tangent.x) * self._axle_lenght,
 			self._chassi_height
@@ -102,7 +103,7 @@ class Player(IHasPos):
 		self._chassi_s.collision_type = CollisionType.PLAYER.value
 		space.add(self._chassi_b, self._chassi_s)
 
-		mass = 2
+		mass = mass_base / 10
 		moment = pymunk.moment_for_circle(mass, 0, self._wheel_radius)
 		self.left_wheel_b = pymunk.Body(mass, 2)
 		self.left_wheel_s = pymunk.Circle(self.left_wheel_b, self._wheel_radius)
@@ -116,7 +117,7 @@ class Player(IHasPos):
 		self._right_wheel_s.collision_type = CollisionType.PLAYER.value
 		space.add(self._right_wheel_b, self._right_wheel_s)
 
-		mass = 0.1
+		mass = mass_base / 200
 		moment = pymunk.moment_for_segment(mass, self._left_axle_p1, self._left_axle_p2, self._axle_radius)
 		self._left_axle_b = pymunk.Body(mass, moment)
 		self._left_axle_s = pymunk.Segment(self._left_axle_b, self._left_axle_p1, self._left_axle_p2, self._axle_radius)
@@ -190,8 +191,15 @@ class Player(IHasPos):
 		right_axle_p2 = camera.apply_pos(Vec2(self._right_axle_b.local_to_world(self._right_axle_p2)))
 		axle_width = camera.get_zoom() * self._axle_radius * 2
 
-		pygame.draw.line(screen, "#D4D7D9", left_axle_p1.to_tuple(), left_axle_p2.to_tuple(), int(axle_width))
-		pygame.draw.line(screen, "#D4D7D9", right_axle_p1.to_tuple(), right_axle_p2.to_tuple(), int(axle_width))
+		try:
+			pygame.draw.line(screen, "#D4D7D9", left_axle_p1.to_tuple(), left_axle_p2.to_tuple(), int(axle_width))
+		except TypeError:
+			log.error("Failed to draw left axle, left_axle_p1:", left_axle_p1, "left_axle_p2:", left_axle_p2, "axle_width:", axle_width)
+		
+		try:
+			pygame.draw.line(screen, "#D4D7D9", right_axle_p1.to_tuple(), right_axle_p2.to_tuple(), int(axle_width))
+		except TypeError:
+			log.error("Failed to draw right axle, right_axle_p1:", right_axle_p1, "right_axle_p2:", right_axle_p2, "axle_width:", axle_width)
 
 		# Draw the chassi
 
@@ -278,6 +286,12 @@ class Player(IHasPos):
 		self.left_wheel_b.position = self._left_axle_b.position + self._left_axle_p1
 		self._right_wheel_b.position = self._right_axle_b.position + self._right_axle_p2
 
+	def set_angle(self, angle: float):
+		self._chassi_b.angle = angle
+
+	def set_angular_velocity(self, velocity: float):
+		self._chassi_b.angular_velocity = velocity
+
 	def get_mass(self) -> float:
 		return self._chassi_b.mass + self.left_wheel_b.mass + self._right_wheel_b.mass + self._left_axle_b.mass + self._right_axle_b.mass
 
@@ -339,6 +353,8 @@ class Player(IHasPos):
 		return self._chassi_b.angular_velocity
 	
 	def apply_rotation(self, force_strength: float):
+		force_strength = force_strength * self.get_mass()
+
 		x_offset = self._chassi_width / 2
 
 		left_point = self._chassi_b.center_of_gravity + pymunk.Vec2d(-x_offset, 0)
