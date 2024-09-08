@@ -106,7 +106,8 @@ class LevelScene(IScene):
 		for tile in self._tile_colliders:
 			tile.update()
 		
-		self._camera.update(dt, self._level_size)
+		self._camera.update(dt)
+		self._camera.clamp(self._level_size)
 
 	def render_game_content(self, screen: pygame.Surface) -> None:
 		self._background.render(screen, self._camera, self._level_size)

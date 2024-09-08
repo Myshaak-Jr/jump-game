@@ -3,7 +3,7 @@ from typing import Any, override
 import pygame
 import pymunk
 import pymunk.space
-from util.my_math import Vec2, exponensial_logarithmic_function
+from util.my_math import Vec2
 from .camera import Camera
 from core import PlanetData, PlayerData, app_state
 import math
@@ -324,8 +324,6 @@ class Player(IHasPos):
 			self._chassi_b.angle += 0.1
 		if key_state[pygame.K_e]:
 			self._chassi_b.angle -= 0.1
-		if key_state[pygame.K_SPACE]:
-			self._settle_angle()
 		else:
 			self._chassi_b.angular_velocity = 0
 			self.point_left = None
@@ -334,25 +332,13 @@ class Player(IHasPos):
 			self.force_right = None
 			self.direction = 0
 
-	def _settle_angle(self):
-		angle = self._chassi_b.angle % (2 * math.pi)
+	def get_angle(self) -> float:
+		return self._chassi_b.angle
 
-		if angle > math.pi:
-			angle -= 2 * math.pi
-
-		print(angle)
-
-		#if abs(angle) < 0.1: return
-		a = 0.1
-		c = 0.7
-		d = 0.2
-
-		angle_mult = math.sin(abs(angle / 2))
-		speed_mult = 1 # c*exponensial_logarithmic_function(-a*abs(self._chassi_b.angular_velocity)) + d
-
-		direction = 1 if angle > 0 else -1
-		force_strength = 300 * angle_mult * speed_mult * direction
-
+	def get_angular_velocity(self) -> float:
+		return self._chassi_b.angular_velocity
+	
+	def apply_rotation(self, force_strength: float):
 		x_offset = self._chassi_width / 2
 
 		left_point = self._chassi_b.center_of_gravity + pymunk.Vec2d(-x_offset, 0)
@@ -360,11 +346,6 @@ class Player(IHasPos):
 
 		self._chassi_b.apply_force_at_local_point(pymunk.Vec2d(0, force_strength), left_point)
 		self._chassi_b.apply_force_at_local_point(pymunk.Vec2d(0, -force_strength), right_point)
-
-		self.point_left = Vec2(left_point).rotated(self._chassi_b.angle) + self._chassi_b.position
-		self.point_right = Vec2(right_point).rotated(self._chassi_b.angle) + self._chassi_b.position
-		self.force_left = Vec2(0, force_strength).rotated(self._chassi_b.angle)
-		self.force_right = Vec2(0, -force_strength).rotated(self._chassi_b.angle)
 
 	def update(self, level_size: Vec2, camera: Camera):
 		# cap the angular velocity

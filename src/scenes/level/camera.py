@@ -45,12 +45,13 @@ class Camera(IHasRect):
 
 		return Vec2(target_x, target_y)
 
-	def update(self, dt: float, level_size: Vec2) -> None:
+	def update(self, dt: float) -> None:
 		if self._following is None: return
 
 		target_pos = self._calc_target_pos()
 		self._pos = my_math.ease(self._pos, target_pos, self._easing_rate, dt)
 
+	def clamp(self, level_size: Vec2) -> None:
 		# Clamp the camera to the level bounds
 		new_x = min(max(self._pos.x, 0), level_size.x - app_state.get_width() / self._zoom)
 		new_y = min(max(self._pos.y, 0), level_size.y - app_state.get_height() / self._zoom)
