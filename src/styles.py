@@ -31,6 +31,12 @@ SMALL_LABEL_STYLE = Style(
 	font_size=20,
 )
 
+LITTLE_LABEL_STYLE = Style(
+	text_color=COLOR_WHITE,
+	font="Comfortaa",
+	font_size=12,
+)
+
 
 BUTTON_STYLE = LABEL_STYLE.updated(Style(
 	background_color=COLOR_WINE,

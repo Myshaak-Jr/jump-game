@@ -19,12 +19,13 @@ __all__ = [
 
 
 class Player(IHasPos):
-	def __init__(self, space: pymunk.Space, x: float, y: float, planet: PlanetData, player_data: PlayerData, mass: float = 20):
+	def __init__(self, space: pymunk.Space, x: float, y: float, planet: PlanetData, player_data: PlayerData, mass: float = 20, physics_only: bool = False):
 		self._planet = planet
 		self._player_data = player_data
 		self._color = (255, 0, 0)
 		self._alive = True
 		self._won = False
+		self._physics_only = physics_only
 
 		# Fuel
 		self._max_fuel = 10
@@ -36,7 +37,8 @@ class Player(IHasPos):
 		self._wheel_friction = 1.5
 
 		# Load the player sprites
-		self._load_sprites()
+		if not self._physics_only:
+			self._load_sprites()
 
 		# On ground
 		self._on_ground: dict[pymunk.Shape, bool] = {}
@@ -166,6 +168,7 @@ class Player(IHasPos):
 		self._wheel = am.get_image(f"assets/image/player/wheels/{wheel}")
 
 	def render(self, screen: pygame.Surface, camera: Camera):
+		if self._physics_only: raise Exception("Cannot render physics only player")
 		# Draw the axles
 		left_axle_p1 = camera.apply_pos(Vec2(self._left_axle_b.local_to_world(self._left_axle_p1)))
 		left_axle_p2 = camera.apply_pos(
@@ -261,6 +264,7 @@ class Player(IHasPos):
 			pygame.draw.line(screen, (0, 255, 0), camera.apply_pos(self.point_right).to_tuple(), camera.apply_pos(self.point_right + self.force_right).to_tuple(), 5)
 
 	def render_fuel_bar(self, screen: pygame.Surface):
+		if self._physics_only: raise Exception("Cannot render physics only player")
 		x = 10
 		y = 10
 		width = app_state.get_width() / 4
@@ -348,6 +352,9 @@ class Player(IHasPos):
 
 	def get_angle(self) -> float:
 		return self._chassi_b.angle
+	
+	def get_normalized_angle(self) -> float:
+		return (self.get_angle() + math.pi) % (2 * math.pi) - math.pi
 
 	def get_angular_velocity(self) -> float:
 		return self._chassi_b.angular_velocity

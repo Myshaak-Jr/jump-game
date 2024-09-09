@@ -151,6 +151,14 @@ class GUIElement:
 		if GUIElement.pressed_element == self:
 			GUIElement.pressed_element = None
 
+	def get_children(self) -> list[GUIElement]:
+		raise NotImplementedError()
+	
+	def set_text(self, text: str) -> None:
+		raise NotImplementedError()
+
+
+
 class IModifier(ABC):
 	def get_offset(self) -> tuple[float, float]:
 		return 0, 0
