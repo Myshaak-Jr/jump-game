@@ -21,9 +21,9 @@
 		},
 		{
 			"name": "sulius",
-			"gravity": 50,
+			"gravity": 70,
 			"drag": 0.1,
-			"game_speed": 35,
+			"game_speed": 40,
 			"game_acceleration": 40
 		},
 		{

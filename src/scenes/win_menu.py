@@ -12,6 +12,14 @@ class WinMenuScene(IScene):
 	def __init__(self, last_level: LevelScene) -> None:
 		self.last_level = last_level
 
+		next_level = app_state.get_next_level(self.last_level.get_planet())
+		if next_level is None:
+			next_scene_on_click = lambda: app_state.queue_scene("main_menu")#"credits"
+			label_text = "gui.button.credits"
+		else:
+			next_scene_on_click = lambda: app_state.queue_scene("level", next_level)
+			label_text = "gui.button.next_level"
+
 		# create the GUI
 		self._gui = Container(width=app_state.get_width(), height=app_state.get_height(), style=Style()).with_children(
 			FlexContainer(app_state.get_width(), direction=Direction.COLUMN, gap = 25, top = app_state.get_height() / 4).with_children(
@@ -19,8 +27,8 @@ class WinMenuScene(IScene):
 				OffsetModifier(HSeparatorElement(app_state.get_width() // 2, color=COLOR_WHITE), 0, -15),
 				FlexContainer(app_state.get_height() / 20, gap = 25).with_children(
 					ButtonModifier(
-						LabelElement(lm.get("gui.button.next_level")),
-						on_click=lambda: app_state.queue_scene("level", self.last_level.get_planet()),
+						LabelElement(lm.get(label_text)),
+						on_click=next_scene_on_click,
 						style=BUTTON_STYLE,
 						style_hovered=BUTTON_STYLE_HOVERED,
 						style_pressed=BUTTON_STYLE_PRESSED
@@ -32,6 +40,13 @@ class WinMenuScene(IScene):
 						style_hovered=BUTTON_STYLE_HOVERED,
 						style_pressed=BUTTON_STYLE_PRESSED
 					)
+				),
+				ButtonModifier(
+					LabelElement(lm.get("gui.button.restart")),
+					on_click=lambda: app_state.queue_scene("level", self.last_level.get_planet()),
+					style=BUTTON_STYLE,
+					style_hovered=BUTTON_STYLE_HOVERED,
+					style_pressed=BUTTON_STYLE_PRESSED
 				)
 			)
 		)

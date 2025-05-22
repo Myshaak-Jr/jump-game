@@ -34,8 +34,6 @@ _width = 0
 _height = 0
 _next_scene: NewSceneData | IScene | None = None
 _running = False
-_planet_data: list[PlanetData] = []
-_player_data = None
 
 _thrust_debug = False
 _show_fps = False
@@ -46,81 +44,9 @@ _initialized = False
 _resolution_changed_callbacks: list[Callable[[int, int], None]] = []
 
 def _init() -> None:
-	global _initialized, _available_scenes, _width, _height, _next_scene, _running, _planet_data, _player_data, _thrust_debug
+	global _initialized, _available_scenes, _width, _height, _next_scene, _running, _thrust_debug
 	if _initialized: return
 	_initialized = True
-
-	
-
-def _load_player_data() -> PlayerData:
-	with open("data/game_data.json", "r") as file:
-		game_data: dict[str, Any] = json.load(file)
-
-	global _player_data
-	_player_data = PlayerData(
-		thrust_up=game_data["player"]["thrust_up"],
-		thrust_down=game_data["player"]["thrust_down"],
-		thrust_decay=game_data["player"]["thrust_decay"]
-	)
-
-	return _player_data
-
-def _load_planet_data() -> None:
-	with open("data/game_data.json", "r") as file:
-		game_data: dict[str, Any] = json.load(file)
-
-	global _planet_data
-
-	for id, planet in enumerate(game_data["planets"]):
-		name = planet["name"]
-		_planet_data.append(PlanetData(
-			id=id,
-			name=name,
-			gravity=planet["gravity"],
-			drag=planet["drag"],
-			game_speed=planet["game_speed"],
-			game_acceleration=planet["game_acceleration"],
-			sprite_path=f"assets/image/planets/{name}.png",
-			translation_key=f"planet.{name}.name"
-		))
-
-		levels: list[LevelData] = []
-		level_files = []
-		try:
-			level_files = sorted(os.listdir(f"data/levels/{name}/"))
-		except FileNotFoundError:
-			log.warn(f"No levels found for planet {name}")
-		finally:
-			for level_id, file in enumerate(level_files):
-				if file.endswith(".txt"):
-					raw_level_data = None
-
-					with open(f"data/levels/{name}/{file}", "r") as f:
-						raw_level_data = f.read()
-					
-					if level_id != int(file[:-4]):
-						log.warn(f"Level ID mismatch in {file}")
-
-					level_data = _parse_level_data(raw_level_data)
-
-					levels.append(LevelData(
-						id=level_id,
-						planet_id=id,
-						level_data=level_data,
-						width=len(level_data[0]),
-						height=len(level_data)
-					))
-			
-			_planet_data[id].levels = tuple(levels)
-
-def _parse_level_data(raw_level_data: str) -> list[list[str]]:
-	level_data: list[list[str]] = []
-
-	width = len(max(raw_level_data.splitlines(), key=len))
-	for row in raw_level_data.splitlines():
-		level_data.append(list(row.ljust(width, " ")))
-
-	return level_data
 
 def register_resolution_changed_callback(callback: Callable[[int, int], None]) -> None:
 	_resolution_changed_callbacks.append(callback)
@@ -212,18 +138,6 @@ def start() -> None:
 def queue_stop() -> None:
 	global _running
 	_running = False
-
-def get_player_data() -> PlayerData:
-	global _player_data
-	if _player_data is None:
-		return _load_player_data()
-	
-	return _player_data
-
-def get_planet_data(id: int) -> PlanetData:
-	if not _planet_data:
-		_load_planet_data()
-	return _planet_data[id]
 
 def enable_thrust_debug() -> None:
 	global _thrust_debug

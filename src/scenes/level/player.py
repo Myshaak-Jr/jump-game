@@ -27,10 +27,12 @@ class Player(IHasPos):
 		self._won = False
 		self._physics_only = physics_only
 
+		self._holding_input = False
+
 		# Fuel
-		self._max_fuel = 10
+		self._max_fuel = 1
 		self._fuel = self._max_fuel
-		self._fuel_regen_speed = 20
+		self._fuel_regen_speed = 2
 
 		# Wheels
 		self._wheel_speed = 50
@@ -42,6 +44,7 @@ class Player(IHasPos):
 
 		# On ground
 		self._on_ground: dict[pymunk.Shape, bool] = {}
+		self._on_ceiling: dict[pymunk.Shape, bool] = {}
 
 		# Pymunk representation
 		self._load_body(space, x, y, mass)
@@ -63,14 +66,14 @@ class Player(IHasPos):
 	def _hit_ground(self, arbiter: pymunk.Arbiter, space: pymunk.Space, data: dict[str, Any]) -> bool:
 		if arbiter.normal.y > 0.3:
 			self._on_ground[arbiter.shapes[0]] = True
+		if arbiter.normal.y < -0.3:
+			self._on_ceiling[arbiter.shapes[0]] = True
 		return True
 	
 	def _separate_ground(self, arbiter: pymunk.Arbiter, space: pymunk.Space, data: dict[str, Any]) -> bool:
 		self._on_ground[arbiter.shapes[0]] = False
+		self._on_ceiling[arbiter.shapes[0]] = False
 		return True
-
-	def is_on_ground(self) -> bool:
-		return any(self._on_ground.values())
 
 	def _load_body(self, space: pymunk.Space, x: float, y: float, mass_base: float):
 		self._scale = 1 / 100 * 6
@@ -100,7 +103,7 @@ class Player(IHasPos):
 		))
 		self._chassi_b = pymunk.Body(mass, moment)
 		self._chassi_s = pymunk.Poly.create_box(self._chassi_b, (self._chassi_width, self._chassi_height))
-		self._chassi_s.friction = 0.7
+		self._chassi_s.friction = 0.01
 		self._chassi_b.center_of_gravity = (0, self._chassi_height * 0.6)
 		self._chassi_s.collision_type = CollisionType.PLAYER.value
 		space.add(self._chassi_b, self._chassi_s)
@@ -299,56 +302,63 @@ class Player(IHasPos):
 	def get_mass(self) -> float:
 		return self._chassi_b.mass + self.left_wheel_b.mass + self._right_wheel_b.mass + self._left_axle_b.mass + self._right_axle_b.mass
 
+	def get_moment(self) -> float:
+		return self._chassi_b.moment
+
+	def is_on_ground(self) -> bool:
+		return any(self._on_ground.values())
+	
+	def is_on_ceiling(self) -> bool:
+		return any(self._on_ceiling.values())
+
+	def is_in_air(self) -> bool:
+		return not self.is_on_ground() and not self.is_on_ceiling()
+
 	def physics_update(self, dt: float):
 		if not self._alive: return
+		
+		# Handle the input
+		key_state = pygame.key.get_pressed()
+		if key_state[pygame.K_SPACE] and self._fuel > 0:
+			force = self._calc_thrust_up_force()
+			point = pymunk.Vec2d(0, -self._chassi_height).rotated(self._chassi_b.angle) + self._chassi_b.position
+			self._chassi_b.apply_force_at_world_point(pymunk.Vec2d(0, force), point)
+
+			self._fuel -= 1 * dt if self.is_on_ceiling() else -force / self._player_data.thrust_up * dt * 0.4
+			self._fuel = max(self._fuel, 0)
+
+			self._holding_input = True
+
+		elif key_state[pygame.K_LSHIFT] and self._fuel > 0:
+			force = self._player_data.thrust_down * self.get_mass()
+			point = pymunk.Vec2d(0, self._chassi_height).rotated(self._chassi_b.angle) + self._chassi_b.position
+			self._chassi_b.apply_force_at_world_point(pymunk.Vec2d(0, force), point)
+
+			self._fuel -= 1 * dt
+			self._fuel = max(self._fuel, 0)
+
+			self._holding_input = True
+	
+		else:
+			self._holding_input = False
 
 		# Modify the fuel
-		if self.is_on_ground():
+		if self.is_on_ground() and not key_state[pygame.K_SPACE]:
 			self._fuel += self._fuel_regen_speed * dt
 			self._fuel = min(self._fuel, self._max_fuel)
 
-		# Handle the input
-		key_state = pygame.key.get_pressed()
-		# if key_state[pygame.K_SPACE] and self._fuel > 0:
-		# 	force = self._calc_thrust_up_force()
-		# 	point = pymunk.Vec2d(0, -self._chassi_height).rotated(self._chassi_b.angle) + self._chassi_b.position
-		# 	self._chassi_b.apply_force_at_world_point(pymunk.Vec2d(0, force), point)
-
-		# elif key_state[pygame.K_LSHIFT] and self._fuel > 0:
-		# 	force = self._player_data.thrust_down * self.get_mass()
-		# 	point = pymunk.Vec2d(0, self._chassi_height).rotated(self._chassi_b.angle) + self._chassi_b.position
-		# 	self._chassi_b.apply_force_at_world_point(pymunk.Vec2d(0, force), point)
-
-		# 	self._fuel -= force / (self._player_data.thrust_up * self.get_mass())
-		# 	self._fuel = max(self._fuel, 0)
-
-		# if self._chassi_b.velocity.x < self._planet.game_speed:
-		# 	point = self._chassi_b.local_to_world(self._chassi_b.center_of_gravity)
-		# 	force = pymunk.Vec2d(self._planet.game_acceleration, 0) * self.get_mass()
-		# 	self._chassi_b.apply_force_at_world_point(force, point)
-
-		if key_state[pygame.K_a]:
-			self._chassi_b.position -= Vec2(20 * dt, 0)
-		if key_state[pygame.K_d]:
-			self._chassi_b.position += Vec2(20 * dt, 0)
-		if key_state[pygame.K_w]:
-			self._chassi_b.position -= Vec2(0, 20 * dt)
-		if key_state[pygame.K_s]:
-			self._chassi_b.position += Vec2(0, 20 * dt)
-
-		self._chassi_b.velocity = 0, 0
-
-		if key_state[pygame.K_q]:
-			self._chassi_b.angle += 0.1
-		if key_state[pygame.K_e]:
-			self._chassi_b.angle -= 0.1
-		else:
-			self._chassi_b.angular_velocity = 0
-			self.point_left = None
-			self.point_right = None
-			self.force_left = None
-			self.force_right = None
-			self.direction = 0
+		if self._chassi_b.velocity.x < self._planet.game_speed:
+			point = self._chassi_b.local_to_world(self._chassi_b.center_of_gravity)
+			force = pymunk.Vec2d(self._planet.game_acceleration, 0) * self.get_mass()
+			self._chassi_b.apply_force_at_world_point(force, point)
+		
+		# Stabilize
+		if self.is_in_air():
+			Kp = 20
+			Kd = 10
+			accel = Kp * self.get_normalized_angle() + Kd * self.get_angular_velocity()
+			self.apply_rotation(accel)
+			
 
 	def get_angle(self) -> float:
 		return self._chassi_b.angle
@@ -374,8 +384,9 @@ class Player(IHasPos):
 		# cap the angular velocity
 		self._chassi_b.angular_velocity = max(min(self._chassi_b.angular_velocity, 10), -10)
 
-		# if self._chassi_b.velocity.x <= 0.0:
-		# 	self._alive = False
+		if self._chassi_b.velocity.x <= 0.0 and not (self._holding_input and self.is_on_ground()):
+			self._alive = False
+		
 		if self._chassi_b.position.y > level_size.y:
 			self._alive = False
 		

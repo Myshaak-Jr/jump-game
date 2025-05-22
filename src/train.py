@@ -172,7 +172,10 @@ def train_genome(genome_id: int, genome: neat.DefaultGenome) -> float:
 
 	player = Player(space, 0, 0, planet_data, player_data, physics_only = True)
 	player.set_angle(random() * 2 * math.pi)
-	player.set_angular_velocity(random() * 30 - 15)
+	if (random() < 0.5):
+		player.set_angular_velocity(-10)
+	else:
+		player.set_angular_velocity(10)
 
 	time = 0.0
 	score = 0.0
@@ -219,7 +222,7 @@ def train() -> None:
 	population.add_reporter(neat.Checkpointer(5, filename_prefix="data/checkpoints/stabilizer-checkpoint-"))
 	population.add_reporter(GUIReporter())
 
-	winner = population.run(eval_genomes, 200)
+	winner = population.run(eval_genomes, 50)
 
 	# Save the winner.
 	with open("data/stabilizer.pkl", "wb") as f:
@@ -227,7 +230,7 @@ def train() -> None:
 
 def test() -> None:
 	# load net
-	with open("data/stabilizer.pkl", "rb") as f:
+	with open("data/stabilizer-first.pkl", "rb") as f:
 		winner = pickle.load(f)
 	
 	app_state.set_window_size(800, 800)
@@ -259,7 +262,7 @@ def test() -> None:
 		if key_state[pygame.K_e]:
 			player.set_angular_velocity(10)
 
-		angle = player.get_angle()
+		angle = player.get_normalized_angle()
 		angle_vel = player.get_angular_velocity()
 
 		output = net.activate((angle, angle_vel))
@@ -275,8 +278,56 @@ def test() -> None:
 		pygame.display.flip()
 
 
+def test_differential_approach():
+	app_state.set_window_size(800, 800)
+	screen = pygame.display.set_mode(app_state.get_window_size())
+	pygame.display.set_caption("Stabilizer Test")
+
+	space = pymunk.Space()
+	space.gravity = (0, 0)
+	space.damping = 0.9
+	player = Player(space, 0, 0, planet_data, player_data)
+
+	clock = pygame.time.Clock()
+
+	camera = Camera(30, 15)
+	camera.follow_object(player)
+
+	while True:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				pygame.quit()
+				return
+
+		dt = clock.tick() / 1000
+
+		key_state = pygame.key.get_pressed()
+		if key_state[pygame.K_q]:
+			player.set_angular_velocity(-10)
+		if key_state[pygame.K_e]:
+			player.set_angular_velocity(10)
+
+		angle = player.get_normalized_angle()
+		angle_vel = player.get_angular_velocity()
+
+		Kp = 50
+		Kd = 10
+
+		accel = Kp * angle + Kd * angle_vel
+
+		player.apply_rotation(accel)
+
+		space.step(dt)
+		camera.update(dt)
+
+		screen.fill((0, 0, 0))
+		player.render(screen, camera)
+		pygame.display.flip()
+
+
+
 pygame.quit()
 
 if __name__ == "__main__":
-	
-	train()
+	# train()
+	test_differential_approach()

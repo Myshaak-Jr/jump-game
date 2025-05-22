@@ -1,7 +1,8 @@
 from . import app_state
+from . import level_manager
 from .app import App
 from .scene import IScene
-from .structs import NewSceneData, PlayerData, PlanetData, LevelData
+from .structs import NewSceneData
 
 __all__ = [
 	"app_state",

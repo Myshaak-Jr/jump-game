@@ -1,7 +1,7 @@
 from __future__ import annotations
 import math
 from typing import override
-from core import IScene, app_state, PlanetData
+from core import IScene, app_state
 import pygame
 from gui import Container, Style
 from gui.elements.label_element import LabelElement
@@ -49,13 +49,14 @@ class LevelScene(IScene):
 	@classmethod
 	def get_name(cls) -> str: return "level"
 
-	def __init__(self, planet: PlanetData) -> None:
+	def __init__(self, planet: PlanetData | str) -> None:
+		if planet == "current":
+			app_state.get_current_planet()
 		self._planet = planet
 
 		# Setup the space
 		self._space = pymunk.Space()
-		# self._space.gravity = 0, self._planet.gravity
-		self._space.gravity = 0, 0
+		self._space.gravity = 0, self._planet.gravity
 		self._space.damping = 0.99
 
 		# Setup the planet and level

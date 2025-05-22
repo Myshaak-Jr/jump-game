@@ -11,14 +11,6 @@ __all__ = [
 
 
 @dataclass
-class LevelData:
-	id: int
-	planet_id: int
-	level_data: list[list[str]]
-	width: int
-	height: int
-
-@dataclass
 class PlanetData:
 	id : int
 	name: str
@@ -28,15 +20,21 @@ class PlanetData:
 	game_acceleration: float
 	sprite_path: str
 	translation_key: str
-	levels: tuple[LevelData, ...] = ()
-	current_level: int = 0
+	num_levels: int = 0
+
+@dataclass
+class LevelData:
+	id: int
+	level_data: list[list[str]]
+	width: int
+	height: int
+	planet: PlanetData
 
 @dataclass
 class PlayerData:
 	thrust_up: float
 	thrust_down: float
 	thrust_decay: float
-
 
 @dataclass
 class NewSceneData:
