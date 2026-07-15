@@ -1,1 +1,1 @@
-A Simple Game where you jump with a car made in a week. Most of the time was spent on the GUI system and the scene system, because I didn't want to use godot lol.
+A Simple Game where you jump with a car made in a week while I was on an internship in b-interactive. Most of the time was spent on the GUI system and the scene system, because I didn't want to use godot lol.
